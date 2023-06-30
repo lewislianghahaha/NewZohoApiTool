@@ -59,7 +59,7 @@
             this.tmclick});
             this.Menu.Location = new System.Drawing.Point(0, 0);
             this.Menu.Name = "Menu";
-            this.Menu.Size = new System.Drawing.Size(388, 25);
+            this.Menu.Size = new System.Drawing.Size(308, 25);
             this.Menu.TabIndex = 0;
             this.Menu.Text = "Menu";
             // 
@@ -80,7 +80,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 25);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(388, 30);
+            this.panel1.Size = new System.Drawing.Size(308, 30);
             this.panel1.TabIndex = 1;
             // 
             // label3
@@ -135,7 +135,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel2.Location = new System.Drawing.Point(0, 55);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(388, 25);
+            this.panel2.Size = new System.Drawing.Size(308, 25);
             this.panel2.TabIndex = 2;
             // 
             // lbmessage
@@ -153,7 +153,7 @@
             this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.panel3.Location = new System.Drawing.Point(0, 246);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(388, 26);
+            this.panel3.Size = new System.Drawing.Size(308, 26);
             this.panel3.TabIndex = 3;
             // 
             // pbar
@@ -161,7 +161,7 @@
             this.pbar.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.pbar.Location = new System.Drawing.Point(0, 1);
             this.pbar.Name = "pbar";
-            this.pbar.Size = new System.Drawing.Size(386, 23);
+            this.pbar.Size = new System.Drawing.Size(306, 23);
             this.pbar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.pbar.TabIndex = 2;
             // 
@@ -177,7 +177,7 @@
             this.panel4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel4.Location = new System.Drawing.Point(0, 80);
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(388, 166);
+            this.panel4.Size = new System.Drawing.Size(308, 166);
             this.panel4.TabIndex = 4;
             // 
             // txtmessage
@@ -188,19 +188,20 @@
             this.txtmessage.Multiline = true;
             this.txtmessage.Name = "txtmessage";
             this.txtmessage.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtmessage.Size = new System.Drawing.Size(386, 164);
+            this.txtmessage.Size = new System.Drawing.Size(306, 164);
             this.txtmessage.TabIndex = 0;
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(388, 272);
+            this.ClientSize = new System.Drawing.Size(308, 272);
             this.Controls.Add(this.panel4);
             this.Controls.Add(this.panel3);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.Menu);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.Menu;
             this.MaximizeBox = false;

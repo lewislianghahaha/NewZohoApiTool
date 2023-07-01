@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ZohoApiTool.DB
+﻿namespace ZohoApiTool.DB
 {
     //SQL语句集合
     public class SqlList
     {
+        //根据SQLID返回对应的SQL语句  
+        private string _result;
+
+
 
     }
 }

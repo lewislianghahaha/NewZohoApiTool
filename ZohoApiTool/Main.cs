@@ -114,9 +114,9 @@ namespace ZohoApiTool
             {
                 pbar.Visible = false;
                 _logipd = 0;
-                txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间超过，不执行任务");
-                //设置添加文本后自动滚动显示到最后一行
-                txtmessage.ScrollToCaret();
+                //txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间超过，不执行任务");
+                ////设置添加文本后自动滚动显示到最后一行
+                //txtmessage.ScrollToCaret();
             }
             else if (now.ToString("HH:mm") == _genTime && _logipd == 0)
             {
@@ -143,10 +143,10 @@ namespace ZohoApiTool
             else
             {
                 pbar.Visible = false;
-                txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 暂不执行任务");
-                //LogHelper.WriteLog(now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "时间已到，执行任务");
-                //设置添加文本后自动滚动显示到最后一行
-                txtmessage.ScrollToCaret();
+                //txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 暂不执行任务");
+                ////LogHelper.WriteLog(now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "时间已到，执行任务");
+                ////设置添加文本后自动滚动显示到最后一行
+                //txtmessage.ScrollToCaret();
             }
         }
 

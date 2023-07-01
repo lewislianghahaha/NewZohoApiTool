@@ -351,5 +351,317 @@ namespace ZohoApiTool.DB
             }
             return dt;
         }
+
+        /// <summary>
+        /// 收集表头API返回记录集
+        /// </summary>
+        /// <returns></returns>
+        public DataTable MakeSalHeadApiDtTemp()
+        {
+            var dt = new DataTable();
+            for (var i = 0; i < 30; i++)
+            {
+                var dc = new DataColumn();
+                switch (i)
+                {
+                    //(主键) PK
+                    case 0:
+                        dc.ColumnName = "salesorder_id";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //客户名称
+                    case 1:
+                        dc.ColumnName = "customer_name";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //邮箱
+                    case 2:
+                        dc.ColumnName = "email";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //交货日期
+                    case 3:
+                        dc.ColumnName = "delivery_date";
+                        dc.DataType = Type.GetType("System.DateTime");
+                        break;
+                    //公司名称
+                    case 4:
+                        dc.ColumnName = "company_name";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //单据编码
+                    case 5:
+                        dc.ColumnName = "salesorder_number";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //参考号码
+                    case 6:
+                        dc.ColumnName = "reference_number";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //单据日期
+                    case 7:
+                        dc.ColumnName = "Orderdate";
+                        dc.DataType = Type.GetType("System.DateTime");
+                        break;
+                    //船务日期
+                    case 8:
+                        dc.ColumnName = "shipment_date";
+                        dc.DataType = Type.GetType("System.DateTime");
+                        break;
+                    //船务天数
+                    case 9:
+                        dc.ColumnName = "shipment_days";
+                        dc.DataType = Type.GetType("System.Int32");
+                        break;
+                    //按天计算
+                    case 10:
+                        dc.ColumnName = "due_by_days";
+                        dc.DataType = Type.GetType("System.Int32");
+                        break;
+                    //截止日期:天
+                    case 11:
+                        dc.ColumnName = "due_in_days";
+                        dc.DataType = Type.GetType("System.Int32");
+                        break;
+                    //货币
+                    case 12:
+                        dc.ColumnName = "currency_code";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //Sub Total
+                    case 13:
+                        dc.ColumnName = "total";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //Total
+                    case 14:
+                        dc.ColumnName = "bcy_total";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //发票总金额
+                    case 15:
+                        dc.ColumnName = "total_invoiced_amount";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //创建日期
+                    case 16:
+                        dc.ColumnName = "created_time";
+                        dc.DataType = Type.GetType("System.DateTime");
+                        break;
+                    //最后一次修改日期
+                    case 17:
+                        dc.ColumnName = "last_modified_time";
+                        dc.DataType = Type.GetType("System.DateTime");
+                        break;
+                    //是否有EMAIL
+                    case 18:
+                        dc.ColumnName = "is_emailed";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //总数量
+                    case 19:
+                        dc.ColumnName = "quantity";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //发票总数量
+                    case 20:
+                        dc.ColumnName = "quantity_invoiced";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //仓库总数量
+                    case 21:
+                        dc.ColumnName = "quantity_packed";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //发送总数量
+                    case 22:
+                        dc.ColumnName = "quantity_shipped";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //单据状态
+                    case 23:
+                        dc.ColumnName = "order_status";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //Invoice状态
+                    case 24:
+                        dc.ColumnName = "invoiced_status";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //Payment状态
+                    case 25:
+                        dc.ColumnName = "paid_status";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //Shipment状态
+                    case 26:
+                        dc.ColumnName = "shipped_status";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //销售员
+                    case 27:
+                        dc.ColumnName = "salesperson_name";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //余额
+                    case 28:
+                        dc.ColumnName = "balance";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //交货方式
+                    case 29:
+                        dc.ColumnName = "delivery_method";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                }
+                dt.Columns.Add(dc);
+            }
+            return dt;
+        }
+
+        /// <summary>
+        /// 收集表体API返回记录集
+        /// </summary>
+        /// <returns></returns>
+        public DataTable MakeSalDetailApiDtTemp()
+        {
+            var dt = new DataTable();
+            for (var i = 0; i < 25; i++)
+            {
+                var dc = new DataColumn();
+                switch (i)
+                {
+                    //fk(T_BOOKS_SAL外键)
+                    case 0:
+                        dc.ColumnName = "salesorder_id";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //物料行ID pk
+                    case 1:
+                        dc.ColumnName = "line_item_id";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //单据日期
+                    case 2:
+                        dc.ColumnName = "Orderdate";
+                        dc.DataType = Type.GetType("System.DateTime");
+                        break;
+                    //物料ID
+                    case 3:
+                        dc.ColumnName = "item_id";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //仓库名称
+                    case 4:
+                        dc.ColumnName = "warehouse_name";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //sku名称
+                    case 5:
+                        dc.ColumnName = "sku";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //物料名称
+                    case 6:
+                        dc.ColumnName = "name";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //组别名称
+                    case 7:
+                        dc.ColumnName = "group_name";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //描述
+                    case 8:
+                        dc.ColumnName = "description";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //汇率
+                    case 9:
+                        dc.ColumnName = "bcy_rate";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //汇率(显示使用)
+                    case 10:
+                        dc.ColumnName = "rate";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //数量
+                    case 11:
+                        dc.ColumnName = "quantity";
+                        dc.DataType = Type.GetType("System.Int32");
+                        break;
+                    //单位
+                    case 12:
+                        dc.ColumnName = "unit";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //折扣金额
+                    case 13:
+                        dc.ColumnName = "discount_amount";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //折扣
+                    case 14:
+                        dc.ColumnName = "discount";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //税类型
+                    case 15:
+                        dc.ColumnName = "tax_type";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //免税代码
+                    case 16:
+                        dc.ColumnName = "tax_exemption_code";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //总金额
+                    case 17:
+                        dc.ColumnName = "item_total";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //项目合计
+                    case 18:
+                        dc.ColumnName = "item_sub_total";
+                        dc.DataType = Type.GetType("System.Decimal");
+                        break;
+                    //生产类别
+                    case 19:
+                        dc.ColumnName = "product_type";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //行物料类别
+                    case 20:
+                        dc.ColumnName = "line_item_type";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //物料类别
+                    case 21:
+                        dc.ColumnName = "item_type";
+                        dc.DataType = Type.GetType("System.String");
+                        break;
+                    //Status-Invoiced
+                    case 22:
+                        dc.ColumnName = "quantity_invoiced";
+                        dc.DataType = Type.GetType("System.Int32");
+                        break;
+                    //Status-Packed
+                    case 23:
+                        dc.ColumnName = "quantity_packed";
+                        dc.DataType = Type.GetType("System.Int32");
+                        break;
+                    //Status-Shipped
+                    case 24:
+                        dc.ColumnName = "quantity_shipped";
+                        dc.DataType = Type.GetType("System.Int32");
+                        break;
+                }
+                dt.Columns.Add(dc);
+            }
+            return dt;
+        }
+
     }
 }

@@ -124,8 +124,17 @@ namespace ZohoApiTool
                 //将内容插入至多行文本(与+=一样作用) 换行\r\n （或System.Environment.NewLine）
                 txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间已到，执行任务");
 
-                txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 执行结束");
-                txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 出现异常,请查看日志信息");
+                //todo:执行核心运算
+                task.GenerateRecord();
+                //todo:根据返回值确定是否成功
+                if (!task.ResultMark)
+                {
+                    txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 出现异常,请查看日志信息");
+                }
+                else
+                {
+                    txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 执行结束");
+                }
                 //设置添加文本后自动滚动显示到最后一行
                 txtmessage.ScrollToCaret();
                 //作用:用于设定同一天只能在设定的时间内执行一次

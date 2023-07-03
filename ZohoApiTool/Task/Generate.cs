@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Deployment.Application;
 using ZohoApiTool.DB;
 
 namespace ZohoApiTool.Task
@@ -69,31 +70,67 @@ namespace ZohoApiTool.Task
 
                 var a = apidtldt.Copy();
 
+                //todo:
+
+
                 //////////////////////////////数据整合部份/////////////////////////////////////
-                //todo:当判断数据表没有任何记录时,直接将API返回的表头 表体记录集,整理后分别插入至数据表
+                //当判断数据表没有任何记录时,直接将API返回的表头 表体记录集,整理后分别插入至对应数据表
+
                 if (Convert.ToInt32(initialDt.Rows[0][0]) == 0)
                 {
-                    //todo:分别将表头 表体数据插入至insertDt 及 insertDtlDt内
-                    insertDt.Merge(MakeInsertRecordDt(0, insertDt, headDt));
-                    insertDtlDt.Merge(MakeInsertRecordDt(1, insertDtlDt, dtldt));
+                    //分别将表头 表体数据插入至insertDt 及 insertDtlDt内
+                    insertDt.Merge(MakeRecordDtToDb(0, 1,insertDt, apiheaddt));
+                    insertDtlDt.Merge(MakeRecordDtToDb(1, 1,insertDtlDt, apidtldt));
                 }
                 else
                 {
-                    //todo:日常操作-将ApiDt放到DbDt内查找,无->插入 有->更新
-
-
-
-                    //todo:检测到当天是1号时,执行‘盘点操作’功能-涉及更新
-                    //todo 作用:使用headDt放到表体API进行查找,若发现没有的,就将IsDel字段=0;若存在,即更新表体所有字段(除IsDel字段)内容
-                    if (1==1)
+                    //todo:日常操作-循环将ApiDt放到HeadDt,DtlDt内查找,无->插入 有->更新
+                    //todo:表头操作
+                    foreach (DataRow rows in apiheaddt.Rows)
                     {
+                        var dtlrows = headDt.Select("salesorder_id ='" + Convert.ToString(rows[0]) + "'");
+                        //新记录-插入操作
+                        if (dtlrows.Length == 0)
+                        {
+                            //todo:将dtlrows进行数据整理-(注:以apiheaddt表结构进行插入数据)
+                            //todo:将结果添加至MakeRecordDtToDb()内
+                            insertDt.Merge(MakeRecordDtToDb(0, 1, insertDt, ExchangeRecordToDb_ByDatarows(rows, apiheaddt.Clone())));
+                        }
+                        //旧记录-更新操作
+                        else
+                        {
+                            upDt.Merge(MakeRecordDtToDb(0,1,upDt, ExchangeRecordToDb_ByArray(dtlrows, apiheaddt.Clone())));
+                        }
+                    }
 
-                    }
-                    //todo:反之,将...
-                    else
+                    //todo:表体操作
+                    foreach (DataRow row in apidtldt.Rows)
                     {
-                        
+                        var dtlrows = dtldt.Select("salesorder_id ='" + Convert.ToString(row[0]) + "'");
+                        //新记录-插入操作
+                        if (dtlrows.Length == 0)
+                        {
+                            insertDtlDt.Merge(MakeRecordDtToDb(1,1,insertDtlDt,ExchangeRecordToDb_ByDatarows(row,apidtldt.Clone())));
+                        }
+                        //旧记录-更新操作
+                        else
+                        {
+                            updtlDtl.Merge(MakeRecordDtToDb(1,1,updtlDtl,ExchangeRecordToDb_ByArray(dtlrows,apidtldt.Clone())));
+                        }
                     }
+
+                    var a1 = insertDt.Copy();
+                    var a2 = insertDtlDt.Copy();
+                    var a3 = upDt.Copy();
+                    var a4 = updtlDtl.Copy();
+
+                    ///////////////////////////////盘点操作////////////////////////////////////////////
+                    //todo:作用:1.检查表头 表体单据是否删除 2.对表(头)体进行数值更新
+                    //
+                    
+
+
+
                 }
 
                 //todo:执行‘插入’ 及 ‘更新’操作
@@ -120,68 +157,120 @@ namespace ZohoApiTool.Task
         }
 
         /// <summary>
-        /// 根据不同typeid对表头 表体数据表进行整理并输出
+        /// 根据datarow[] 整理数据至dt  或 dtdtl内
+        /// 注:以数组进行整合
         /// </summary>
-        /// <param name="typeid">0:表头 1:表体</param>
-        /// <param name="tempdt"></param>
-        /// <param name="sourcedt"></param>
+        /// <param name="rows"></param>
+        /// <param name="temp"></param>
         /// <returns></returns>
-        private DataTable MakeInsertRecordDt(int typeid,DataTable tempdt,DataTable sourcedt)
+        private DataTable ExchangeRecordToDb_ByArray(DataRow [] rows,DataTable temp)
         {
-            if (typeid == 0)
+            for (var i = 0; i < rows.Length; i++)
             {
-                foreach (DataRow rows in sourcedt.Rows)
-                {
-                    var newrow = tempdt.NewRow();
-                    //
-                    //
-                    //
-                    //
-                    //
-                    tempdt.Rows.Add(newrow);
-                }
+               temp.ImportRow(rows[i]);
             }
-            else
-            {
-                foreach (DataRow rows in sourcedt.Rows)
-                {
-                    var newrow = tempdt.NewRow();
-                    //
-                    //
-                    //
-                    //
-                    //
-                    tempdt.Rows.Add(newrow);
-                }
-            }
-            return tempdt;
+            return temp;
+        }
+
+        /// <summary>
+        /// 根据datarow 整理数据至dt  或 dtdtl内
+        /// 注:以Datarow进行整合
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="temp"></param>
+        /// <returns></returns>
+        private DataTable ExchangeRecordToDb_ByDatarows(DataRow row, DataTable temp)
+        {
+            temp.ImportRow(row);
+            return temp;
         }
 
         /// <summary>
         /// 根据不同typeid对表头 表体数据表进行整理并输出
         /// </summary>
-        /// <param name="typeid">0:表头 1:表体(无删除的记录) 2:表体(删除的记录)</param>
+        /// <param name="typeid">0:表头 1:表体 用isdel区分是否删除记录</param>
+        /// <param name="isdel">是否删除 0:是 1:否</param>
         /// <param name="tempdt"></param>
         /// <param name="sourcedt"></param>
         /// <returns></returns>
-        private DataTable MakeUpRecordDt(int typeid, DataTable tempdt, DataTable sourcedt)
+        private DataTable MakeRecordDtToDb(int typeid,int isdel,DataTable tempdt,DataTable sourcedt)
         {
-            switch (typeid)
+            try
             {
-                case 0:
+                if (typeid == 0)
+                {
+                    for (var i = 0; i < sourcedt.Rows.Count; i++)
+                    {
+                        for (var j = 0; j < tempdt.Columns.Count; j++)
+                        {
+                            var newrow = tempdt.NewRow();
 
-                    break;
-                case 1:
+                            switch (j)
+                            {
+                                //是否删除(0:是 1:否)
+                                case 30:
+                                    newrow[j] = isdel;
+                                    break;
+                                //国家类别(暂分为:US,MX)=>用于区分ZOHO不同国家类别
+                                case 33:
+                                    newrow[j] = "US";
+                                    break;
+                                //单据插入日期(PS:一经插入,不能修改)
+                                case 31:
+                                //最后一次操作日期(PS:记录最后一次更新日期,更新时使用;每次Up可覆盖更新)
+                                case 32:
+                                    newrow[j] = DateTime.Now.Date;
+                                    break;
+                                default:
+                                    newrow[j] = sourcedt.Rows[i][j];
+                                    break;
+                            }
 
-                    break;
-                case 2:
+                            tempdt.Rows.Add(newrow);
+                        }
+                    }
+                }
+                else if (typeid == 1)
+                {
+                    for (var i = 0; i < sourcedt.Rows.Count; i++)
+                    {
+                        for (var j = 0; j < tempdt.Columns.Count; j++)
+                        {
+                            var newrow = tempdt.NewRow();
 
-                    break;
+                            switch (j)
+                            {
+                                //是否删除(0:是 1:否)
+                                case 25:
+                                    newrow[j] = isdel;
+                                    break;
+                                //国家类别(暂分为:US,MX)=>用于区分ZOHO不同国家类别
+                                case 28:
+                                    newrow[j] = "US";
+                                    break;
+                                //单据插入日期(PS:一经插入,不能修改)
+                                case 26:
+                                //最后一次操作日期(PS:记录最后一次更新日期,更新时使用;每次Up可覆盖更新)
+                                case 27:
+                                    newrow[j] = DateTime.Now.Date;
+                                    break;
+                                default:
+                                    newrow[j] = sourcedt.Rows[i][j];
+                                    break;
+                            }
+
+                            tempdt.Rows.Add(newrow);
+                        }
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                LogHelper.WriteErrorLog("插入出现异常,原因:",ex);
+            }
+
             return tempdt;
         }
-
-
 
         /// <summary>
         /// 针对指定表进行数据插入

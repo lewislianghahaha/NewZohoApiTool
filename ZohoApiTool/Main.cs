@@ -51,12 +51,18 @@ namespace ZohoApiTool
                     }
 
                     tmclick.Text = $"结束执行";
+
                     //获取下拉列表所选值(时)
                     var dvHour = (DataRowView)comhour.Items[comhour.SelectedIndex];
                     //获取下拉列表所选值(分)
                     var dvmin = (DataRowView)commin.Items[commin.SelectedIndex];
                     //对所选择的‘’及‘分’进行数据组合
                     _genTime = $"{Convert.ToString(dvHour["Id"])}:{Convert.ToString(dvmin["Id"])}";
+
+                    //设置两个下拉列表为不可操作
+                    comhour.Enabled = false;
+                    commin.Enabled = false;
+
                     //设置显示信息
                     lbmessage.Text = $"在每天{_genTime}执行,将从'{DateTime.Now.ToString("yyyy-MM-dd")}'开始执行计划";
 
@@ -77,11 +83,13 @@ namespace ZohoApiTool
                     txtmessage.ScrollToCaret();
                     _myTimer.Stop();
                     pbar.Visible = false;
+                    comhour.Enabled = true;
+                    commin.Enabled = true;
                 }
             }
             catch (Exception ex)
             {
-                LogHelper.WriteErrorLog("出现异常:", ex);
+                LogHelper.WriteErrorLog("出现异常,原因:", ex);
             }
         }
 

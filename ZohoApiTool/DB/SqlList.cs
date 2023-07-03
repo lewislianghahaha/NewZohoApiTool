@@ -18,6 +18,8 @@
 
         /// <summary>
         /// 初始化获取T_BOOKS_SAL表记录(注:只获取上月1号至当天 且 IsDel=1的记录)
+        /// 作用:1.与API返回结果进行比较,判断API返回数据是否新记录
+        ///      2.放到表体API进行查找,用于判断此单据是否已删除
         /// </summary>
         /// <returns></returns>
         public string GetSearchBooksSalHead()
@@ -33,11 +35,12 @@
 
         /// <summary>
         /// 根据表头信息获取表体line_item_id记录 (作用:用于判断已存在的明细记录是否删除)
+        /// 作用:将表体API放到此查询语句返回数据集内，判断是否存在对应记录
         /// </summary>
         /// <returns></returns>
         public string GetSearchBooksSalDtl()
         {
-            _result = @"SELECT A.line_item_id
+            _result = @"SELECT X.salesorder_id,A.line_item_id
                         FROM T_BOOKS_SALDTL A
                         INNER JOIN (
                                         SELECT TOP 9700 A.salesorder_id

@@ -92,8 +92,7 @@ namespace ZohoApiTool.Task
 
                 //执行调用API
                 var response = client.Execute(request);
-                if (Convert.ToString(response.StatusCode) != "OK") throw new Exception($"调用Api出现异常,原因:{response.ErrorMessage}");
-                else
+                if (Convert.ToString(response.StatusCode) == "OK") //throw new Exception($"调用Api出现异常,原因:{response.ErrorMessage}");
                 {
                     GetApiJsonRecord(1,response.Content);
                     LogHelper.WriteLog($"已获取API返回记录,行数'{_headDt.Rows.Count}");
@@ -138,8 +137,7 @@ namespace ZohoApiTool.Task
                 //执行调用API
                 var response = client.Execute(request);
 
-                if (Convert.ToString(response.StatusCode) != "OK") throw new Exception($"调用Api出现异常,原因:{response.ErrorMessage}");
-                else
+                if (Convert.ToString(response.StatusCode) == "OK") //throw new Exception($"调用Api出现异常,原因:{response.ErrorMessage}");
                 {
                     GetApiJsonRecord(2, response.Content);
                     LogHelper.WriteLog($"已获取API返回记录,行数'{_dtldt.Rows.Count}");
@@ -246,6 +244,9 @@ namespace ZohoApiTool.Task
                     newrow[22] = Convert.ToInt32(ordJToken["quantity_invoiced"]);      //Status-Invoiced
                     newrow[23] = Convert.ToInt32(ordJToken["quantity_packed"]);        //Status-Packed
                     newrow[24] = Convert.ToInt32(ordJToken["quantity_shipped"]);       //Status-Shipped
+
+                    //
+
                     _dtldt.Rows.Add(newrow);
                 }
                 var b = _dtldt.Copy();

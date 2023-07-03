@@ -50,7 +50,38 @@
             return _result;
         }
 
+        /// <summary>
+        /// 根据表名获取查询表体语句(更新时使用) 只显示TOP 1记录
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <returns></returns>
+        public string SearchUpdateTable(string tableName)
+        {
+            _result = $@"
+                          SELECT Top 1 a.*
+                          FROM {tableName} a
+                        ";
+            return _result;
+        }
 
+        /// <summary>
+        /// 更新语句
+        /// </summary>
+        /// <param name="tablename"></param>
+        /// <returns></returns>
+        public string UpdateEntry(string tablename)
+        {
+            switch (tablename)
+            {
+                case "":
+                    _result = @"UPDATE dbo.T_OfferOrder SET OAorderno=@OAorderno,Fstatus=@Fstatus,ConfirmDt=@ConfirmDt,CreateDt=@CreateDt,
+                                                            CreateName=@CreateName,Useid=@Useid,UserName=@UserName,Typeid=@Typeid,DevGroupid=@DevGroupid
+                                WHERE FId=@FId";
+                    break;
+                
+            }
+            return _result;
+        }
 
     }
 }

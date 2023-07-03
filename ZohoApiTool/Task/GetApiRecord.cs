@@ -26,7 +26,7 @@ namespace ZohoApiTool.Task
         {
             try
             {
-                LogHelper.WriteLog("获取刷新令牌");
+                LogHelper.WriteLog("获取刷新令牌开始");
 
                 //todo:设置API 刷新令牌URL 地址
                 var serviceUrl = $@"https://accounts.zoho.com/oauth/v2/token?refresh_token=1000.de999e5653faa9642fbce6501a337516.bb785e602be2b63616c88eb0d3ce2d19
@@ -34,6 +34,8 @@ namespace ZohoApiTool.Task
                                 &client_secret=fa638b638a7ff82e42bdfb4a9b5271a4a816b8f027
                                 &redirect_uri=http://www.zoho.com/Books&grant_type=refresh_token";
 
+                //todo:一定要这一句,不然会出现:"未能创建SSL/TLS安全通道"异常
+                System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
                 //todo:执行调用API获取Access_Token(刷新令牌)
                 var client = new RestClient(serviceUrl);
@@ -57,6 +59,7 @@ namespace ZohoApiTool.Task
             {
                 LogHelper.WriteErrorLog("获取Access_Token令牌异常,原因:",ex);
             }
+
             return _accesstoken;
         }
 
@@ -70,7 +73,14 @@ namespace ZohoApiTool.Task
         {
             try
             {
+                LogHelper.WriteLog("获取刷新令牌开始");
+
+                _headDt = tempdt.Clone();
+
                 var serviceUrl = $"https://www.zohoapis.com/books/v3/salesorders?organization_id={_organizationid}";
+
+                //todo:一定要这一句,不然会出现:"未能创建SSL/TLS安全通道"异常
+                System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
                 var client = new RestClient(serviceUrl);
                 //定义request对像
@@ -91,7 +101,7 @@ namespace ZohoApiTool.Task
             }
             catch (Exception ex)
             {
-                LogHelper.WriteErrorLog("出现异常:", ex);
+                LogHelper.WriteErrorLog("获取表头API出现异常,原因:", ex);
             }
 
             return _headDt;
@@ -108,7 +118,14 @@ namespace ZohoApiTool.Task
         {
             try
             {
+                LogHelper.WriteLog("获取刷新令牌开始");
+
+                _dtldt = tempdt.Clone();
+
                 var serviceUrl = $"https://www.zohoapis.com/books/v3/salesorders/{salesorderId}?organization_id={_organizationid}";
+
+                //todo:一定要这一句,不然会出现:"未能创建SSL/TLS安全通道"异常
+                System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
                 var client = new RestClient(serviceUrl);
                 //定义request对象
@@ -125,13 +142,13 @@ namespace ZohoApiTool.Task
                 else
                 {
                     GetApiJsonRecord(2, response.Content);
-                    LogHelper.WriteLog($"已获取API返回记录,行数'{_headDt.Rows.Count}");
+                    LogHelper.WriteLog($"已获取API返回记录,行数'{_dtldt.Rows.Count}");
                 }
 
             }
             catch (Exception ex)
             {
-                LogHelper.WriteErrorLog("出现异常:", ex);
+                LogHelper.WriteErrorLog("获取表体API出现异常,原因:", ex);
             }
 
             return _dtldt;

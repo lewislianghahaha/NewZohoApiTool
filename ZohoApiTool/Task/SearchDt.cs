@@ -37,7 +37,7 @@ namespace ZohoApiTool.Task
         /// <summary>
         /// 按照指定的SQL语句执行记录并返回执行结果（true 或 false） 更新 删除时使用
         /// </summary>
-        public bool Generdt(string sqlscript)
+        private bool Generdt(string sqlscript)
         {
             var result = true;
 

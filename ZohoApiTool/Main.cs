@@ -122,7 +122,7 @@ namespace ZohoApiTool
             {
                 pbar.Visible = true;
                 //将内容插入至多行文本(与+=一样作用) 换行\r\n （或System.Environment.NewLine）
-                txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间已到，执行任务");
+                txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间已到,开始执行任务");
 
                 //todo:执行核心运算
                 task.GenerateRecord();

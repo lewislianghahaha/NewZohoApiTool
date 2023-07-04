@@ -1,4 +1,6 @@
-﻿namespace ZohoApiTool.DB
+﻿using System.Collections;
+
+namespace ZohoApiTool.DB
 {
     //SQL语句集合
     public class SqlList
@@ -24,7 +26,7 @@
         /// <returns></returns>
         public string GetSearchBooksSalHead()
         {
-            _result = @"SELECT TOP 9700 A.salesorder_id
+            _result = @"SELECT TOP 9900 A.salesorder_id
                         FROM T_BOOKS_SAL A
                         WHERE A.IsDel = 1
                         AND A.CountryType = 'US'
@@ -43,7 +45,7 @@
             _result = @"SELECT X.salesorder_id,A.line_item_id
                         FROM T_BOOKS_SALDTL A
                         INNER JOIN (
-                                        SELECT TOP 9700 A.salesorder_id
+                                        SELECT TOP 9900 A.salesorder_id
 						                FROM T_BOOKS_SAL A
 						                WHERE A.IsDel=1
 						                AND A.CountryType='US'
@@ -60,10 +62,28 @@
         /// <returns></returns>
         public string SearchUpdateTable(string tableName)
         {
-            _result = $@"
+            switch (tableName)
+            {
+                case "T_BOOKS_SAL":
+                case "T_BOOKS_SALDTL":
+                    _result = $@"
                           SELECT Top 1 a.*
                           FROM {tableName} a
                         ";
+                    break;
+                case "T_BOOKS_SAL_Check":
+                    _result = $@"
+                          SELECT Top 1 a.*
+                          FROM T_BOOKS_SAL a
+                        ";
+                    break;
+                case "T_BOOKS_SALDTL_Check":
+                    _result = $@"
+                          SELECT Top 1 a.*
+                          FROM T_BOOKS_SALDTL a
+                        ";
+                    break;
+            }
             return _result;
         }
 
@@ -76,15 +96,25 @@
         {
             switch (tablename)
             {
-                case "":
+                case "T_BOOKS_SAL":
                     _result = @"UPDATE dbo.T_OfferOrder SET OAorderno=@OAorderno,Fstatus=@Fstatus,ConfirmDt=@ConfirmDt,CreateDt=@CreateDt,
                                                             CreateName=@CreateName,Useid=@Useid,UserName=@UserName,Typeid=@Typeid,DevGroupid=@DevGroupid
                                 WHERE FId=@FId";
                     break;
-                
+                case "T_BOOKS_SALDTL":
+                    _result = @"";
+                    break;
+                case "T_BOOKS_SAL_Check":
+                    _result = @"";
+                    break;
+                case "T_BOOKS_SALDTL_Check":
+                    _result = @"";
+                    break;
             }
             return _result;
         }
+
+
 
     }
 }

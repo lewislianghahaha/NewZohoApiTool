@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Deployment.Application;
 using ZohoApiTool.DB;
 
 namespace ZohoApiTool.Task
@@ -32,6 +31,11 @@ namespace ZohoApiTool.Task
                 var apiheaddt = tempDtList.MakeSalHeadApiDtTemp();
                 //获取Api表体临时表
                 var apidtldt = tempDtList.MakeSalDetailApiDtTemp();
+                //获取‘监盘操作’所需临时表
+                var checkdtldt = tempDtList.MakeSalCheckApiDtTemp();
+
+                //获取‘已删除’的记录集-‘监盘操作’使用
+                var deldt = tempDtList.MakeDelDt();
 
                 //获取T_BOOKS_SAL表信息-插入使用
                 var insertDt = tempDtList.MakeSalHeadDtTemp();
@@ -41,9 +45,9 @@ namespace ZohoApiTool.Task
                 //获取T_BOOKS_SAL表信息-更新使用
                 var upDt = insertDt.Clone();
                 //获取T_BOOK_SALDTL表信息-更新使用
-                var updtlDtl = insertDtlDt.Clone();
+                var updtlDt = insertDtlDt.Clone();
 
-                //获取从DB获取的各数据源
+
                 //获取表头数据行数-当数据表没有数据时使用(ps:限一次使用)
                 var initialDt = searchDt.GetIninitalRecord();
                 //获取T_BOOKS_SAL 表头信息-用作比较
@@ -51,40 +55,94 @@ namespace ZohoApiTool.Task
                 //获取T_BOOKS_SALDTL 表体信息-用作比较
                 var dtldt = searchDt.GetBooksSalDetailRecord();
 
+                var bb = DateTime.Today.DayOfWeek.ToString();
 
-                /////////////////////////////API数据收集部份/////////////////////////////////
                 //通过zoho Api获取相关信息
                 //获取‘刷新令牌’
                 var accesstoken = getApi.GetAccessToken();
-                //获取zoho api表头返回记录
-                apiheaddt.Merge(getApi.GetSalHeadRecord(apiheaddt,accesstoken));
-
-                var b = apiheaddt.Copy();
-
-                //循环获取zoho api表体返回记录
-                foreach (DataRow rows in apiheaddt.Rows)
-                {
-                    var a1 = Convert.ToString(rows[0]);
-                    apidtldt.Merge(getApi.GetSalDetailRecord(apidtldt,Convert.ToString(rows[0]),accesstoken));
-                }
-
-                var a = apidtldt.Copy();
-
-                //todo:
-
 
                 //////////////////////////////数据整合部份/////////////////////////////////////
                 //当判断数据表没有任何记录时,直接将API返回的表头 表体记录集,整理后分别插入至对应数据表
-
                 if (Convert.ToInt32(initialDt.Rows[0][0]) == 0)
                 {
+                    GlobalClasscs.RmMessage.Ischeck = 1;
                     //分别将表头 表体数据插入至insertDt 及 insertDtlDt内
                     insertDt.Merge(MakeRecordDtToDb(0, 1,insertDt, apiheaddt));
                     insertDtlDt.Merge(MakeRecordDtToDb(1, 1,insertDtlDt, apidtldt));
                 }
+                //todo:执行‘监盘机器人操作’ - 每周日执行
+                else if (DateTime.Today.DayOfWeek.ToString() == "Sunday")
+                {
+                    GlobalClasscs.RmMessage.Ischeck = 0;
+
+                    //todo:将headDt循环放到表体API进行查找,并整理成相关DT返回给checkdtldt
+                    foreach (DataRow rows in headDt.Rows)
+                    {
+                        var a12 = Convert.ToString(rows[0]);
+                        checkdtldt.Merge(getApi.GetSalDetailRecord(checkdtldt,Convert.ToString(rows[0]),accesstoken));
+                    }
+                    var c = checkdtldt.Copy();
+
+                    //todo:使用dtldt进行放到checkdtldt进行查找，执行以下操作:(重)
+                    // 1.若整单不存在,标记IsDel=0 2.若明细行不存在,标记IsDel=0 3.对存在的记录-表头 表体对应字段进行更新
+                    foreach (DataRow rows in dtldt.Rows)
+                    {
+                        var salesorderid = Convert.ToString(rows[0]);
+                        var lineitemid = Convert.ToString(rows[1]);
+
+                        //todo:判断若salesorderid 或 lineitemid 在deldt内存在,就contine
+                        if (deldt.Select("salesorder_id='" + salesorderid + "'").Length>0) continue;
+                        if (deldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "'").Length>0) continue;
+
+                        //todo:1.将salesorderid 放到 checkdtldt内查找,若发现不存在,即直接将salesorderid插入至deldt内,并contine
+                        if (checkdtldt.Select("salesorder_id='"+salesorderid+"'").Length == 0)
+                        {
+                            //插入至deldt内
+                            deldt.Merge(InsertDelDt(deldt, 0, salesorderid, ""));
+                            continue;
+                        }
+                        //todo:2.将salesorderid && lineitemid 放到 checkdtldt内查找,若发现不存在,即直接将salesorderid lineitemid插入至deldt内,并contine
+                        else if (checkdtldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "'").Length == 0)
+                        {
+                            //插入至deldt内
+                            deldt.Merge(InsertDelDt(deldt, 1, salesorderid, lineitemid));
+                            continue;
+                        }
+                        //todo:3.若循环的salesorderid 及 lineitemid都在checkdtldt有记录,即整理后进行更新
+                        else //if(checkdtldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "'").Length >0)
+                        {
+                            //todo:将checkdtldt中记录表头信息整理,并最后插入至updt内
+                            upDt.Merge(MakeCheckDt(0,upDt,rows));
+                            //todo:将checkdtldt中记录表体信息整理,并最后插入至updtldt内
+                            updtlDt.Merge(MakeCheckDt(1, updtlDt, rows));
+                        }
+                    }
+                    var c1 = deldt.Copy();
+                    var c2 = upDt.Copy();
+                    var c3 = updtlDt.Copy();
+                }
+                //todo:日常操作(除周日外执行)-循环将ApiDt放到HeadDt,DtlDt内查找,无->插入 有->更新
                 else
                 {
-                    //todo:日常操作-循环将ApiDt放到HeadDt,DtlDt内查找,无->插入 有->更新
+                    GlobalClasscs.RmMessage.Ischeck = 1;
+
+                    /////////////////////////////API数据收集部份/////////////////////////////////
+                    //获取zoho api表头返回记录
+                    apiheaddt.Merge(getApi.GetSalHeadRecord(apiheaddt, accesstoken));
+
+                    var b = apiheaddt.Copy();
+
+                    //循环获取zoho api表体返回记录
+                    foreach (DataRow rows in apiheaddt.Rows)
+                    {
+                        var a11 = Convert.ToString(rows[0]);
+                        apidtldt.Merge(getApi.GetSalDetailRecord(apidtldt, Convert.ToString(rows[0]), accesstoken));
+                    }
+
+                    var a = apidtldt.Copy();
+
+                    /////////////////////////////////////数据处理////////////////////////////////////////////
+
                     //todo:表头操作
                     foreach (DataRow rows in apiheaddt.Rows)
                     {
@@ -99,14 +157,14 @@ namespace ZohoApiTool.Task
                         //旧记录-更新操作
                         else
                         {
-                            upDt.Merge(MakeRecordDtToDb(0,1,upDt, ExchangeRecordToDb_ByArray(dtlrows, apiheaddt.Clone())));
+                            upDt.Merge(MakeRecordDtToDb(2,1,upDt, ExchangeRecordToDb_ByArray(dtlrows, apiheaddt.Clone())));
                         }
                     }
 
                     //todo:表体操作
                     foreach (DataRow row in apidtldt.Rows)
                     {
-                        var dtlrows = dtldt.Select("salesorder_id ='" + Convert.ToString(row[0]) + "'");
+                        var dtlrows = dtldt.Select("salesorder_id ='" + Convert.ToString(row[0]) + "' and line_item_id='"+Convert.ToString(row[1])+"'");
                         //新记录-插入操作
                         if (dtlrows.Length == 0)
                         {
@@ -115,22 +173,14 @@ namespace ZohoApiTool.Task
                         //旧记录-更新操作
                         else
                         {
-                            updtlDtl.Merge(MakeRecordDtToDb(1,1,updtlDtl,ExchangeRecordToDb_ByArray(dtlrows,apidtldt.Clone())));
+                            updtlDt.Merge(MakeRecordDtToDb(3,1, updtlDt, ExchangeRecordToDb_ByArray(dtlrows,apidtldt.Clone())));
                         }
                     }
 
                     var a1 = insertDt.Copy();
                     var a2 = insertDtlDt.Copy();
                     var a3 = upDt.Copy();
-                    var a4 = updtlDtl.Copy();
-
-                    ///////////////////////////////盘点操作////////////////////////////////////////////
-                    //todo:作用:1.检查表头 表体单据是否删除 2.对表(头)体进行数值更新
-                    //
-                    
-
-
-
+                    var a4 = updtlDt.Copy();
                 }
 
                 //todo:执行‘插入’ 及 ‘更新’操作
@@ -139,11 +189,20 @@ namespace ZohoApiTool.Task
                 if (insertDtlDt.Rows.Count > 0)
                     ImportDtToDb("T_BOOKS_SALDTL", insertDtlDt);
 
-                if (upDt.Rows.Count > 0)
+                if (upDt.Rows.Count > 0 && GlobalClasscs.RmMessage.Ischeck==1)
                     UpdateDbFromDt("T_BOOKS_SAL", upDt);
+                if (updtlDt.Rows.Count > 0 && GlobalClasscs.RmMessage.Ischeck == 1)
+                    UpdateDbFromDt("T_BOOKS_SALDTL", updtlDt);
 
-                if (updtlDtl.Rows.Count > 0)
-                    UpdateDbFromDt("T_BOOKS_SALDTL",updtlDtl);
+                //todo:‘监盘操作’使用
+                if (upDt.Rows.Count > 0 && GlobalClasscs.RmMessage.Ischeck == 0)
+                    UpdateDbFromDt("T_BOOKS_SAL_Check", upDt);
+                if (updtlDt.Rows.Count > 0 && GlobalClasscs.RmMessage.Ischeck == 0)
+                    UpdateDbFromDt("T_BOOKS_SALDTL_Check", updtlDt);
+
+                //执行‘删除’操作-‘监盘操作’使用
+                if (deldt.Rows.Count > 0)
+                    UseUpdateDelRecord(deldt);
 
                 LogHelper.WriteLog("执行结束...");
             }
@@ -154,6 +213,110 @@ namespace ZohoApiTool.Task
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// 执行对不存在的记录进行-更新IsDel=0操作
+        /// </summary>
+        /// <param name="sourcedt"></param>
+        private void UseUpdateDelRecord(DataTable sourcedt)
+        {
+            //todo:对表头执行操作
+
+
+
+            //todo:对表体执行操作
+
+        }
+
+        /// <summary>
+        /// 整理checkdtldt内的数据,拆分为表头 表体记录，最后用于更新-'监盘功能使用' *
+        /// </summary>
+        /// <param name="typeid">0:对表头进行操作  1:对表体进行操作</param>
+        /// <param name="tempdt">分别对应updt updtldt两个临时表</param>
+        /// <param name="row">循环checkdtldt内的每一行记录</param>
+        /// <returns></returns>
+        private DataTable MakeCheckDt(int typeid,DataTable tempdt,DataRow row)
+        {
+            if (typeid == 0)
+            {
+                var newrow = tempdt.NewRow();
+                newrow[0] = Convert.ToString(row[0]);       //salesorder_id
+                newrow[1] = Convert.ToString(row[1]);       //客户名称
+                newrow[5] = Convert.ToString(row[2]);       //单据编码
+                newrow[6] = Convert.ToString(row[3]);       //参考号码
+                newrow[7] = Convert.ToDateTime(row[4]);     //单据日期
+                newrow[8] = Convert.ToDateTime(row[5]);     //船务日期
+                newrow[12] = Convert.ToString(row[6]);      //货币
+                newrow[13] = Convert.ToDecimal(row[7]);     //Sub Total
+                newrow[14] = Convert.ToDecimal(row[8]);     //Total
+                newrow[17] = Convert.ToDateTime(row[9]);    //最后一次修改日期
+                newrow[19] = Convert.ToDecimal(row[10]);    //总数量
+                newrow[20] = Convert.ToDecimal(row[11]);    //发票总数量
+                newrow[21] = Convert.ToDecimal(row[12]);    //仓库总数量
+                newrow[22] = Convert.ToDecimal(row[13]);    //发送总数量
+                newrow[23] = Convert.ToString(row[14]);     //单据状态
+                newrow[24] = Convert.ToString(row[15]);     //Invoice状态
+                newrow[25] = Convert.ToString(row[16]);     //Payment状态
+                newrow[26] = Convert.ToString(row[17]);     //Shipment状态
+                newrow[28] = Convert.ToDecimal(row[18]);    //余额
+                newrow[29] = Convert.ToString(row[19]);     //交货方式
+                newrow[30] = 1;                             //是否删除(0:是 1:否)
+                newrow[32] = DateTime.Now.Date;             //最后一次操作日期
+
+                tempdt.Rows.Add(newrow);
+            }
+            else
+            {
+                var newrow = tempdt.NewRow();
+                newrow[0] = Convert.ToString(row[0]);       //fk(T_BOOKS_SAL外键)
+                newrow[1] = Convert.ToString(row[20]);      //pk
+                newrow[3] = Convert.ToString(row[21]);      //物料ID
+                newrow[4] = Convert.ToString(row[22]);      //仓库名称
+                newrow[5] = Convert.ToString(row[23]);      //sku名称
+                newrow[6] = Convert.ToString(row[24]);      //物料名称
+                newrow[7] = Convert.ToString(row[25]);      //组别名称
+                newrow[8] = Convert.ToString(row[26]);      //描述
+                newrow[9] = Convert.ToDecimal(row[27]);     //汇率
+                newrow[10] = Convert.ToDecimal(row[28]);    //汇率(显示使用)
+                newrow[11] = Convert.ToInt32(row[29]);      //数量
+                newrow[12] = Convert.ToString(row[30]);     //单位
+                newrow[13] = Convert.ToDecimal(row[31]);    //折扣金额
+                newrow[14] = Convert.ToDecimal(row[32]);    //折扣
+                newrow[15] = Convert.ToString(row[33]);     //税类型
+                newrow[16] = Convert.ToString(row[34]);     //免税代码
+                newrow[17] = Convert.ToDecimal(row[35]);    //总金额
+                newrow[18] = Convert.ToDecimal(row[36]);    //项目合计
+                newrow[19] = Convert.ToString(row[37]);     //生产类别
+                newrow[20] = Convert.ToString(row[38]);     //行物料类别
+                newrow[21] = Convert.ToString(row[39]);     //物料类别
+                newrow[22] = Convert.ToInt32(row[40]);      //Status-Invoiced
+                newrow[23] = Convert.ToInt32(row[41]);      //Status-Packed
+                newrow[24] = Convert.ToInt32(row[42]);      //Status-Shipped
+                newrow[25] = 1;                             //是否删除(0:是 1:否)
+                newrow[26] = DateTime.Now.Date;             //最后一次操作日期
+                tempdt.Rows.Add(newrow);
+            }
+
+            return tempdt;
+        }
+
+        /// <summary>
+        /// 整理不存在的单据ID-‘监盘功能使用’
+        /// </summary>
+        /// <param name="temp"></param>
+        /// <param name="typeid">0:只插入表头主键  1:插入表头及表体主键</param>
+        /// <param name="salesorderid"></param>
+        /// <param name="lineitemid"></param>
+        /// <returns></returns>
+        private DataTable InsertDelDt(DataTable temp,int typeid,string salesorderid,string lineitemid)
+        {
+            var newrow = temp.NewRow();
+            newrow[0] = typeid;
+            newrow[1] = salesorderid;
+            newrow[2] = lineitemid;
+            temp.Rows.Add(newrow);
+            return temp;
         }
 
         /// <summary>
@@ -186,9 +349,9 @@ namespace ZohoApiTool.Task
         }
 
         /// <summary>
-        /// 根据不同typeid对表头 表体数据表进行整理并输出
+        /// 根据不同typeid对表头 表体数据表进行整理成,可对数据表操作的表格--针对‘日常操作’功能使用
         /// </summary>
-        /// <param name="typeid">0:表头 1:表体 用isdel区分是否删除记录</param>
+        /// <param name="typeid">0:表头插入 1:表体插入 2:表头更新 3:表体更新 用isdel区分是否删除记录</param>
         /// <param name="isdel">是否删除 0:是 1:否</param>
         /// <param name="tempdt"></param>
         /// <param name="sourcedt"></param>
@@ -263,6 +426,69 @@ namespace ZohoApiTool.Task
                         }
                     }
                 }
+                else if (typeid == 2)
+                {
+                    for (var i = 0; i < sourcedt.Rows.Count; i++)
+                    {
+                        for (var j = 0; j < tempdt.Columns.Count; j++)
+                        {
+                            var newrow = tempdt.NewRow();
+
+                            switch (j)
+                            {
+                                //是否删除(0:是 1:否)
+                                case 30:
+                                    newrow[j] = isdel;
+                                    break;
+                                //国家类别(暂分为:US,MX)=>用于区分ZOHO不同国家类别
+                                //case 33:
+                                //    newrow[j] = "US";
+                                //    break;
+                                //最后一次操作日期(PS:记录最后一次更新日期,更新时使用;每次Up可覆盖更新)
+                                case 32:
+                                    newrow[j] = DateTime.Now.Date;
+                                    break;
+                                default:
+                                    newrow[j] = sourcedt.Rows[i][j];
+                                    break;
+                            }
+
+                            tempdt.Rows.Add(newrow);
+                        }
+                    }
+                }
+                else if (typeid == 3)
+                {
+                    for (var i = 0; i < sourcedt.Rows.Count; i++)
+                    {
+                        for (var j = 0; j < tempdt.Columns.Count; j++)
+                        {
+                            var newrow = tempdt.NewRow();
+
+                            switch (j)
+                            {
+                                //是否删除(0:是 1:否)
+                                case 25:
+                                    newrow[j] = isdel;
+                                    break;
+                                //国家类别(暂分为:US,MX)=>用于区分ZOHO不同国家类别
+                                //case 28:
+                                //    newrow[j] = "US";
+                                //    break;
+                                //最后一次操作日期(PS:记录最后一次更新日期,更新时使用;每次Up可覆盖更新)
+                                case 27:
+                                    newrow[j] = DateTime.Now.Date;
+                                    break;
+                                default:
+                                    newrow[j] = sourcedt.Rows[i][j];
+                                    break;
+                            }
+
+                            tempdt.Rows.Add(newrow);
+                        }
+                    }
+                }
+
             }
             catch (Exception ex)
             {
@@ -344,7 +570,7 @@ namespace ZohoApiTool.Task
             //定义所需的变量参数
             switch (tablename)
             {
-                case "":
+                case "T_BOOKS_SAL":
                     da.UpdateCommand.Parameters.Add("@FId", SqlDbType.Int, 8, "FId");
                     da.UpdateCommand.Parameters.Add("@OAorderno", SqlDbType.NVarChar, 100, "OAorderno");
                     da.UpdateCommand.Parameters.Add("@Fstatus", SqlDbType.Int, 8, "Fstatus");
@@ -355,6 +581,18 @@ namespace ZohoApiTool.Task
                     da.UpdateCommand.Parameters.Add("@UserName", SqlDbType.NVarChar, 200, "UserName");
                     da.UpdateCommand.Parameters.Add("@Typeid", SqlDbType.Int, 8, "Typeid");
                     da.UpdateCommand.Parameters.Add("@DevGroupid", SqlDbType.Int, 8, "DevGroupid");
+                    break;
+                case "T_BOOKS_SALDTL":
+                    da.UpdateCommand.Parameters.Add("@FId", SqlDbType.Int, 8, "FId");
+
+                    break;
+                case "T_BOOKS_SAL_Check":
+                    da.UpdateCommand.Parameters.Add("@FId", SqlDbType.Int, 8, "FId");
+
+                    break;
+                case "T_BOOKS_SALDTL_Check":
+                    da.UpdateCommand.Parameters.Add("@FId", SqlDbType.Int, 8, "FId");
+
                     break;
             }
             return da;

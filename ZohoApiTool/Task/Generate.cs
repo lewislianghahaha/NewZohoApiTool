@@ -75,7 +75,7 @@ namespace ZohoApiTool.Task
                 {
                     GlobalClasscs.RmMessage.Ischeck = 0;
 
-                    //todo:将headDt循环放到表体API进行查找,并整理成相关DT返回给checkdtldt
+                    //将headDt循环放到表体API进行查找,并整理成相关DT返回给checkdtldt
                     foreach (DataRow rows in headDt.Rows)
                     {
                         var a12 = Convert.ToString(rows[0]);
@@ -83,25 +83,25 @@ namespace ZohoApiTool.Task
                     }
                     var c = checkdtldt.Copy();
 
-                    //todo:使用dtldt进行放到checkdtldt进行查找，执行以下操作:(重)
+                    //使用dtldt进行放到checkdtldt进行查找，并执行以下操作:(重)
                     // 1.若整单不存在,标记IsDel=0 2.若明细行不存在,标记IsDel=0 3.对存在的记录-表头 表体对应字段进行更新
                     foreach (DataRow rows in dtldt.Rows)
                     {
                         var salesorderid = Convert.ToString(rows[0]);
                         var lineitemid = Convert.ToString(rows[1]);
 
-                        //todo:判断若salesorderid 或 lineitemid 在deldt内存在,就contine
+                        //todo:判断若salesorderid 或 lineitemid 在deldt内存在,即continue
                         if (deldt.Select("salesorder_id='" + salesorderid + "'").Length>0) continue;
                         if (deldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "'").Length>0) continue;
 
-                        //todo:1.将salesorderid 放到 checkdtldt内查找,若发现不存在,即直接将salesorderid插入至deldt内,并contine
+                        //todo:1.将salesorderid 放到 checkdtldt内查找,若发现不存在,即直接将salesorderid插入至deldt内,并continue
                         if (checkdtldt.Select("salesorder_id='"+salesorderid+"'").Length == 0)
                         {
                             //插入至deldt内
                             deldt.Merge(InsertDelDt(deldt, 0, salesorderid, ""));
                             continue;
                         }
-                        //todo:2.将salesorderid && lineitemid 放到 checkdtldt内查找,若发现不存在,即直接将salesorderid lineitemid插入至deldt内,并contine
+                        //todo:2.将salesorderid && lineitemid 放到 checkdtldt内查找,若发现不存在,即直接将salesorderid lineitemid插入至deldt内,并continue
                         else if (checkdtldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "'").Length == 0)
                         {
                             //插入至deldt内
@@ -111,10 +111,12 @@ namespace ZohoApiTool.Task
                         //todo:3.若循环的salesorderid 及 lineitemid都在checkdtldt有记录,即整理后进行更新
                         else //if(checkdtldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "'").Length >0)
                         {
+                            var dtlrows = checkdtldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "'");
+
                             //todo:将checkdtldt中记录表头信息整理,并最后插入至updt内
-                            upDt.Merge(MakeCheckDt(0,upDt,rows));
+                            upDt.Merge(MakeCheckDt(0,upDt, dtlrows));
                             //todo:将checkdtldt中记录表体信息整理,并最后插入至updtldt内
-                            updtlDt.Merge(MakeCheckDt(1, updtlDt, rows));
+                            updtlDt.Merge(MakeCheckDt(1, updtlDt, dtlrows));
                         }
                     }
                     var c1 = deldt.Copy();
@@ -147,6 +149,7 @@ namespace ZohoApiTool.Task
                     foreach (DataRow rows in apiheaddt.Rows)
                     {
                         var dtlrows = headDt.Select("salesorder_id ='" + Convert.ToString(rows[0]) + "'");
+
                         //新记录-插入操作
                         if (dtlrows.Length == 0)
                         {
@@ -165,6 +168,7 @@ namespace ZohoApiTool.Task
                     foreach (DataRow row in apidtldt.Rows)
                     {
                         var dtlrows = dtldt.Select("salesorder_id ='" + Convert.ToString(row[0]) + "' and line_item_id='"+Convert.ToString(row[1])+"'");
+
                         //新记录-插入操作
                         if (dtlrows.Length == 0)
                         {
@@ -189,12 +193,13 @@ namespace ZohoApiTool.Task
                 if (insertDtlDt.Rows.Count > 0)
                     ImportDtToDb("T_BOOKS_SALDTL", insertDtlDt);
 
+                //todo:'日常操作'更新使用
                 if (upDt.Rows.Count > 0 && GlobalClasscs.RmMessage.Ischeck==1)
                     UpdateDbFromDt("T_BOOKS_SAL", upDt);
                 if (updtlDt.Rows.Count > 0 && GlobalClasscs.RmMessage.Ischeck == 1)
                     UpdateDbFromDt("T_BOOKS_SALDTL", updtlDt);
 
-                //todo:‘监盘操作’使用
+                //todo:‘监盘操作’更新使用
                 if (upDt.Rows.Count > 0 && GlobalClasscs.RmMessage.Ischeck == 0)
                     UpdateDbFromDt("T_BOOKS_SAL_Check", upDt);
                 if (updtlDt.Rows.Count > 0 && GlobalClasscs.RmMessage.Ischeck == 0)
@@ -221,12 +226,52 @@ namespace ZohoApiTool.Task
         /// <param name="sourcedt"></param>
         private void UseUpdateDelRecord(DataTable sourcedt)
         {
-            //todo:对表头执行操作
+            try
+            {
+                for (var i = 0; i < 2; i++)
+                {
+                    var dtlrows = sourcedt.Select("typeid='" + i + "'");
+                    var uplist = GetUpDelList(i,dtlrows);
+                    searchDt.UpIsDelRecord(i, uplist);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteErrorLog("更新IsDel出现异常,原因:",ex);
+            }
+        }
 
+        /// <summary>
+        /// 整合进行更新的主键值
+        /// </summary>
+        /// <param name="typeid">0:获取salesorder_id值  1:获取line_item_id值</param>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        private string GetUpDelList(int typeid,DataRow[] row)
+        {
+            var result = string.Empty;
+            //中转比较变量
+            var temp = string.Empty;
+            //定义要获取的列ID，当typeid=0 获取salesorder_id值  1:获取line_item_id值
+            var colid = typeid == 0 ? 1 : 2;
 
+            for (var i = 0; i < row.Length; i++)
+            {
+                //第一行(初始化)时,将第一行的相关值赋给对应的变量内
+                if (temp == "")
+                {
+                    temp = Convert.ToString(row[i][colid]);
+                    result = "'" + Convert.ToString(row[i][colid]) + "'";
+                }
+                //从第二行开始判断是否一致
+                else if (temp != Convert.ToString(row[i][colid]))
+                {
+                    temp = Convert.ToString(row[i][colid]);
+                    result += ',' + "'" + Convert.ToString(row[i][colid]) + "'";
+                }
+            }
 
-            //todo:对表体执行操作
-
+            return result;
         }
 
         /// <summary>
@@ -236,7 +281,7 @@ namespace ZohoApiTool.Task
         /// <param name="tempdt">分别对应updt updtldt两个临时表</param>
         /// <param name="row">循环checkdtldt内的每一行记录</param>
         /// <returns></returns>
-        private DataTable MakeCheckDt(int typeid,DataTable tempdt,DataRow row)
+        private DataTable MakeCheckDt(int typeid,DataTable tempdt,DataRow[] row)
         {
             if (typeid == 0)
             {
@@ -311,11 +356,19 @@ namespace ZohoApiTool.Task
         /// <returns></returns>
         private DataTable InsertDelDt(DataTable temp,int typeid,string salesorderid,string lineitemid)
         {
-            var newrow = temp.NewRow();
-            newrow[0] = typeid;
-            newrow[1] = salesorderid;
-            newrow[2] = lineitemid;
-            temp.Rows.Add(newrow);
+            try
+            {
+                var newrow = temp.NewRow();
+                newrow[0] = typeid;
+                newrow[1] = salesorderid;
+                newrow[2] = lineitemid;
+                temp.Rows.Add(newrow);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.WriteErrorLog("插入删除表出现异常,原因:",ex);
+            }
+
             return temp;
         }
 
@@ -360,6 +413,7 @@ namespace ZohoApiTool.Task
         {
             try
             {
+                //0:表头插入
                 if (typeid == 0)
                 {
                     for (var i = 0; i < sourcedt.Rows.Count; i++)
@@ -393,6 +447,7 @@ namespace ZohoApiTool.Task
                         }
                     }
                 }
+                //1:表体插入
                 else if (typeid == 1)
                 {
                     for (var i = 0; i < sourcedt.Rows.Count; i++)
@@ -426,6 +481,7 @@ namespace ZohoApiTool.Task
                         }
                     }
                 }
+                //2:表头更新
                 else if (typeid == 2)
                 {
                     for (var i = 0; i < sourcedt.Rows.Count; i++)
@@ -457,6 +513,7 @@ namespace ZohoApiTool.Task
                         }
                     }
                 }
+                //3:表体更新
                 else if (typeid == 3)
                 {
                     for (var i = 0; i < sourcedt.Rows.Count; i++)
@@ -527,8 +584,25 @@ namespace ZohoApiTool.Task
             var sqladpter = new SqlDataAdapter();
             var ds = new DataSet();
 
+            var dtName = "";
+
+            switch (tablename)
+            {
+                case "T_BOOKS_SAL_Check":
+                case "T_BOOKS_SAL":
+                    dtName = "T_BOOKS_SAL";
+                    break;
+                case "T_BOOKS_SALDTL":
+                case "T_BOOKS_SALDTL_Check":
+                    dtName = "T_BOOKS_SALDTL";
+                    break;
+            }
+
+            var a = tablename;
+            var b = dtName;
+
             //根据表格名称获取对应的模板表记录
-            var searList = sqlList.SearchUpdateTable(tablename);
+            var searList = sqlList.SearchUpdateTable(dtName);
 
             using (sqladpter.SelectCommand = new SqlCommand(searList, conDb.GetConnection()))
             {
@@ -571,28 +645,128 @@ namespace ZohoApiTool.Task
             switch (tablename)
             {
                 case "T_BOOKS_SAL":
-                    da.UpdateCommand.Parameters.Add("@FId", SqlDbType.Int, 8, "FId");
-                    da.UpdateCommand.Parameters.Add("@OAorderno", SqlDbType.NVarChar, 100, "OAorderno");
-                    da.UpdateCommand.Parameters.Add("@Fstatus", SqlDbType.Int, 8, "Fstatus");
-                    da.UpdateCommand.Parameters.Add("@CreateDt", SqlDbType.DateTime, 10, "CreateDt");
-                    da.UpdateCommand.Parameters.Add("@ConfirmDt", SqlDbType.DateTime, 10, "ConfirmDt");
-                    da.UpdateCommand.Parameters.Add("@CreateName", SqlDbType.NVarChar, 100, "CreateName");
-                    da.UpdateCommand.Parameters.Add("@Useid", SqlDbType.Int, 8, "Useid");
-                    da.UpdateCommand.Parameters.Add("@UserName", SqlDbType.NVarChar, 200, "UserName");
-                    da.UpdateCommand.Parameters.Add("@Typeid", SqlDbType.Int, 8, "Typeid");
-                    da.UpdateCommand.Parameters.Add("@DevGroupid", SqlDbType.Int, 8, "DevGroupid");
+                    da.UpdateCommand.Parameters.Add("@salesorder_id", SqlDbType.NVarChar, 200, "salesorder_id");
+                    da.UpdateCommand.Parameters.Add("@customer_name",SqlDbType.NVarChar,200, "customer_name");
+                    da.UpdateCommand.Parameters.Add("@email", SqlDbType.NVarChar, 100, "email");
+                    da.UpdateCommand.Parameters.Add("@delivery_date", SqlDbType.DateTime, 10, "delivery_date");
+                    da.UpdateCommand.Parameters.Add("@company_name", SqlDbType.NVarChar,100, "company_name");
+                    da.UpdateCommand.Parameters.Add("@salesorder_number", SqlDbType.NVarChar, 100, "salesorder_number");
+                    da.UpdateCommand.Parameters.Add("@reference_number", SqlDbType.NVarChar, 100, "reference_number");
+                    da.UpdateCommand.Parameters.Add("@Orderdate", SqlDbType.DateTime, 10, "Orderdate");
+                    da.UpdateCommand.Parameters.Add("@shipment_date", SqlDbType.DateTime, 10, "shipment_date");
+                    da.UpdateCommand.Parameters.Add("@shipment_days", SqlDbType.Int, 8, "shipment_days");
+                    da.UpdateCommand.Parameters.Add("@due_by_days", SqlDbType.Int, 8, "due_by_days");
+                    da.UpdateCommand.Parameters.Add("@due_in_days", SqlDbType.Int, 8, "due_in_days");
+                    da.UpdateCommand.Parameters.Add("@currency_code", SqlDbType.NVarChar, 100, "currency_code");
+                    da.UpdateCommand.Parameters.Add("@total", SqlDbType.Decimal, 4, "total");
+                    da.UpdateCommand.Parameters.Add("@bcy_total", SqlDbType.Decimal, 4, "bcy_total");
+                    da.UpdateCommand.Parameters.Add("@total_invoiced_amount", SqlDbType.Decimal, 4, "total_invoiced_amount");
+                    da.UpdateCommand.Parameters.Add("@last_modified_time", SqlDbType.DateTime, 10, "last_modified_time");
+                    da.UpdateCommand.Parameters.Add("@is_emailed", SqlDbType.NVarChar, 100, "is_emailed");
+                    da.UpdateCommand.Parameters.Add("@quantity", SqlDbType.Decimal, 4, "quantity");
+                    da.UpdateCommand.Parameters.Add("@quantity_invoiced", SqlDbType.Decimal, 4, "quantity_invoiced");
+                    da.UpdateCommand.Parameters.Add("@quantity_packed", SqlDbType.Decimal, 4, "quantity_packed");
+                    da.UpdateCommand.Parameters.Add("@quantity_shipped", SqlDbType.Decimal, 4, "quantity_shipped");
+                    da.UpdateCommand.Parameters.Add("@order_status", SqlDbType.NVarChar, 100, "order_status");
+                    da.UpdateCommand.Parameters.Add("@invoiced_status", SqlDbType.NVarChar, 100, "invoiced_status");
+                    da.UpdateCommand.Parameters.Add("@paid_status", SqlDbType.NVarChar, 100, "paid_status");
+                    da.UpdateCommand.Parameters.Add("@shipped_status", SqlDbType.NVarChar, 100, "shipped_status");
+                    da.UpdateCommand.Parameters.Add("@salesperson_name", SqlDbType.NVarChar, 100, "salesperson_name");
+                    da.UpdateCommand.Parameters.Add("@balance", SqlDbType.Decimal, 4, "balance");
+                    da.UpdateCommand.Parameters.Add("@delivery_method", SqlDbType.NVarChar, 100, "delivery_method");
+                    da.UpdateCommand.Parameters.Add("@IsDel", SqlDbType.Int, 8, "IsDel");
+                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.DateTime, 10, "LastChangeDt");
                     break;
                 case "T_BOOKS_SALDTL":
-                    da.UpdateCommand.Parameters.Add("@FId", SqlDbType.Int, 8, "FId");
-
+                    da.UpdateCommand.Parameters.Add("@salesorder_id", SqlDbType.NVarChar, 200, "salesorder_id");
+                    da.UpdateCommand.Parameters.Add("@line_item_id", SqlDbType.NVarChar, 200, "line_item_id");
+                    da.UpdateCommand.Parameters.Add("@Orderdate", SqlDbType.DateTime, 10, "Orderdate");
+                    da.UpdateCommand.Parameters.Add("@item_id", SqlDbType.NVarChar, 100, "item_id");
+                    da.UpdateCommand.Parameters.Add("@warehouse_name", SqlDbType.NVarChar, 200, "warehouse_name");
+                    da.UpdateCommand.Parameters.Add("@sku", SqlDbType.NVarChar, 200, "sku");
+                    da.UpdateCommand.Parameters.Add("@name", SqlDbType.NVarChar, 200, "name");
+                    da.UpdateCommand.Parameters.Add("@group_name", SqlDbType.NVarChar, 200, "group_name");
+                    da.UpdateCommand.Parameters.Add("@description", SqlDbType.NVarChar, 500, "description");
+                    da.UpdateCommand.Parameters.Add("@bcy_rate", SqlDbType.Decimal, 2, "bcy_rate");
+                    da.UpdateCommand.Parameters.Add("@rate", SqlDbType.Decimal, 2, "rate");
+                    da.UpdateCommand.Parameters.Add("@quantity", SqlDbType.Int, 8, "quantity");
+                    da.UpdateCommand.Parameters.Add("@unit", SqlDbType.NVarChar, 10, "unit");
+                    da.UpdateCommand.Parameters.Add("@discount_amount", SqlDbType.Decimal, 2, "discount_amount");
+                    da.UpdateCommand.Parameters.Add("@discount", SqlDbType.Decimal, 2, "discount");
+                    da.UpdateCommand.Parameters.Add("@tax_type", SqlDbType.NVarChar, 100, "tax_type");
+                    da.UpdateCommand.Parameters.Add("@tax_exemption_code", SqlDbType.NVarChar, 200, "tax_exemption_code");
+                    da.UpdateCommand.Parameters.Add("@item_total", SqlDbType.Decimal, 2, "item_total");
+                    da.UpdateCommand.Parameters.Add("@item_sub_total", SqlDbType.Decimal, 2, "item_sub_total");
+                    da.UpdateCommand.Parameters.Add("@product_type", SqlDbType.NVarChar, 100, "product_type");
+                    da.UpdateCommand.Parameters.Add("@line_item_type", SqlDbType.NVarChar, 100, "line_item_type");
+                    da.UpdateCommand.Parameters.Add("@item_type", SqlDbType.NVarChar, 100, "item_type");
+                    da.UpdateCommand.Parameters.Add("@quantity_invoiced", SqlDbType.Int, 8, "quantity_invoiced");
+                    da.UpdateCommand.Parameters.Add("@quantity_packed", SqlDbType.Int, 8, "quantity_packed");
+                    da.UpdateCommand.Parameters.Add("@quantity_shipped", SqlDbType.Int, 8, "quantity_shipped");
+                    da.UpdateCommand.Parameters.Add("@IsDel", SqlDbType.Int, 8, "IsDel");
+                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.DateTime, 10, "LastChangeDt");
                     break;
                 case "T_BOOKS_SAL_Check":
-                    da.UpdateCommand.Parameters.Add("@FId", SqlDbType.Int, 8, "FId");
-
+                    da.UpdateCommand.Parameters.Add("@salesorder_id", SqlDbType.NVarChar, 200, "salesorder_id");
+                    da.UpdateCommand.Parameters.Add("@customer_name", SqlDbType.NVarChar, 200, "customer_name");
+                    //da.UpdateCommand.Parameters.Add("@email", SqlDbType.NVarChar, 100, "email");
+                    //da.UpdateCommand.Parameters.Add("@delivery_date", SqlDbType.DateTime, 10, "delivery_date");
+                    //da.UpdateCommand.Parameters.Add("@company_name", SqlDbType.NVarChar, 100, "company_name");
+                    da.UpdateCommand.Parameters.Add("@salesorder_number", SqlDbType.NVarChar, 100, "salesorder_number");
+                    da.UpdateCommand.Parameters.Add("@reference_number", SqlDbType.NVarChar, 100, "reference_number");
+                    da.UpdateCommand.Parameters.Add("@Orderdate", SqlDbType.DateTime, 10, "Orderdate");
+                    da.UpdateCommand.Parameters.Add("@shipment_date", SqlDbType.DateTime, 10, "shipment_date");
+                    //da.UpdateCommand.Parameters.Add("@shipment_days", SqlDbType.Int, 8, "shipment_days");
+                    //da.UpdateCommand.Parameters.Add("@due_by_days", SqlDbType.Int, 8, "due_by_days");
+                    //da.UpdateCommand.Parameters.Add("@due_in_days", SqlDbType.Int, 8, "due_in_days");
+                    da.UpdateCommand.Parameters.Add("@currency_code", SqlDbType.NVarChar, 100, "currency_code");
+                    da.UpdateCommand.Parameters.Add("@total", SqlDbType.Decimal, 4, "total");
+                    da.UpdateCommand.Parameters.Add("@bcy_total", SqlDbType.Decimal, 4, "bcy_total");
+                    //da.UpdateCommand.Parameters.Add("@total_invoiced_amount", SqlDbType.Decimal, 4, "total_invoiced_amount");
+                    da.UpdateCommand.Parameters.Add("@last_modified_time", SqlDbType.DateTime, 10, "last_modified_time");
+                    //da.UpdateCommand.Parameters.Add("@is_emailed", SqlDbType.NVarChar, 100, "is_emailed");
+                    da.UpdateCommand.Parameters.Add("@quantity", SqlDbType.Decimal, 4, "quantity");
+                    da.UpdateCommand.Parameters.Add("@quantity_invoiced", SqlDbType.Decimal, 4, "quantity_invoiced");
+                    da.UpdateCommand.Parameters.Add("@quantity_packed", SqlDbType.Decimal, 4, "quantity_packed");
+                    da.UpdateCommand.Parameters.Add("@quantity_shipped", SqlDbType.Decimal, 4, "quantity_shipped");
+                    da.UpdateCommand.Parameters.Add("@order_status", SqlDbType.NVarChar, 100, "order_status");
+                    da.UpdateCommand.Parameters.Add("@invoiced_status", SqlDbType.NVarChar, 100, "invoiced_status");
+                    da.UpdateCommand.Parameters.Add("@paid_status", SqlDbType.NVarChar, 100, "paid_status");
+                    da.UpdateCommand.Parameters.Add("@shipped_status", SqlDbType.NVarChar, 100, "shipped_status");
+                    //da.UpdateCommand.Parameters.Add("@salesperson_name", SqlDbType.NVarChar, 100, "salesperson_name");
+                    da.UpdateCommand.Parameters.Add("@balance", SqlDbType.Decimal, 4, "balance");
+                    da.UpdateCommand.Parameters.Add("@delivery_method", SqlDbType.NVarChar, 100, "delivery_method");
+                    da.UpdateCommand.Parameters.Add("@IsDel", SqlDbType.Int, 8, "IsDel");
+                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.DateTime, 10, "LastChangeDt");
                     break;
                 case "T_BOOKS_SALDTL_Check":
-                    da.UpdateCommand.Parameters.Add("@FId", SqlDbType.Int, 8, "FId");
-
+                    da.UpdateCommand.Parameters.Add("@salesorder_id", SqlDbType.NVarChar, 200, "salesorder_id");
+                    da.UpdateCommand.Parameters.Add("@line_item_id", SqlDbType.NVarChar, 200, "line_item_id");
+                    //da.UpdateCommand.Parameters.Add("@Orderdate", SqlDbType.DateTime, 10, "Orderdate");
+                    da.UpdateCommand.Parameters.Add("@item_id", SqlDbType.NVarChar, 100, "item_id");
+                    da.UpdateCommand.Parameters.Add("@warehouse_name", SqlDbType.NVarChar, 200, "warehouse_name");
+                    da.UpdateCommand.Parameters.Add("@sku", SqlDbType.NVarChar, 200, "sku");
+                    da.UpdateCommand.Parameters.Add("@name", SqlDbType.NVarChar, 200, "name");
+                    da.UpdateCommand.Parameters.Add("@group_name", SqlDbType.NVarChar, 200, "group_name");
+                    da.UpdateCommand.Parameters.Add("@description", SqlDbType.NVarChar, 500, "description");
+                    da.UpdateCommand.Parameters.Add("@bcy_rate", SqlDbType.Decimal, 2, "bcy_rate");
+                    da.UpdateCommand.Parameters.Add("@rate", SqlDbType.Decimal, 2, "rate");
+                    da.UpdateCommand.Parameters.Add("@quantity", SqlDbType.Int, 8, "quantity");
+                    da.UpdateCommand.Parameters.Add("@unit", SqlDbType.NVarChar, 10, "unit");
+                    da.UpdateCommand.Parameters.Add("@discount_amount", SqlDbType.Decimal, 2, "discount_amount");
+                    da.UpdateCommand.Parameters.Add("@discount", SqlDbType.Decimal, 2, "discount");
+                    da.UpdateCommand.Parameters.Add("@tax_type", SqlDbType.NVarChar, 100, "tax_type");
+                    da.UpdateCommand.Parameters.Add("@tax_exemption_code", SqlDbType.NVarChar, 200, "tax_exemption_code");
+                    da.UpdateCommand.Parameters.Add("@item_total", SqlDbType.Decimal, 2, "item_total");
+                    da.UpdateCommand.Parameters.Add("@item_sub_total", SqlDbType.Decimal, 2, "item_sub_total");
+                    da.UpdateCommand.Parameters.Add("@product_type", SqlDbType.NVarChar, 100, "product_type");
+                    da.UpdateCommand.Parameters.Add("@line_item_type", SqlDbType.NVarChar, 100, "line_item_type");
+                    da.UpdateCommand.Parameters.Add("@item_type", SqlDbType.NVarChar, 100, "item_type");
+                    da.UpdateCommand.Parameters.Add("@quantity_invoiced", SqlDbType.Int, 8, "quantity_invoiced");
+                    da.UpdateCommand.Parameters.Add("@quantity_packed", SqlDbType.Int, 8, "quantity_packed");
+                    da.UpdateCommand.Parameters.Add("@quantity_shipped", SqlDbType.Int, 8, "quantity_shipped");
+                    da.UpdateCommand.Parameters.Add("@IsDel", SqlDbType.Int, 8, "IsDel");
+                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.DateTime, 10, "LastChangeDt");
                     break;
             }
             return da;

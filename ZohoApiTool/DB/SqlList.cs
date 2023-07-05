@@ -62,28 +62,10 @@ namespace ZohoApiTool.DB
         /// <returns></returns>
         public string SearchUpdateTable(string tableName)
         {
-            switch (tableName)
-            {
-                case "T_BOOKS_SAL":
-                case "T_BOOKS_SALDTL":
-                    _result = $@"
+            _result = $@"
                           SELECT Top 1 a.*
                           FROM {tableName} a
                         ";
-                    break;
-                case "T_BOOKS_SAL_Check":
-                    _result = $@"
-                          SELECT Top 1 a.*
-                          FROM T_BOOKS_SAL a
-                        ";
-                    break;
-                case "T_BOOKS_SALDTL_Check":
-                    _result = $@"
-                          SELECT Top 1 a.*
-                          FROM T_BOOKS_SALDTL a
-                        ";
-                    break;
-            }
             return _result;
         }
 
@@ -97,24 +79,92 @@ namespace ZohoApiTool.DB
             switch (tablename)
             {
                 case "T_BOOKS_SAL":
-                    _result = @"UPDATE dbo.T_OfferOrder SET OAorderno=@OAorderno,Fstatus=@Fstatus,ConfirmDt=@ConfirmDt,CreateDt=@CreateDt,
-                                                            CreateName=@CreateName,Useid=@Useid,UserName=@UserName,Typeid=@Typeid,DevGroupid=@DevGroupid
-                                WHERE FId=@FId";
+                    _result = @"UPDATE dbo.T_BOOKS_SAL SET  customer_name=@customer_name,email=@email,delivery_date=@delivery_date,
+												company_name=@company_name,salesorder_number=@salesorder_number,
+												reference_number=@reference_number,Orderdate=@Orderdate ,
+												shipment_date=@shipment_date,shipment_days=@shipment_days ,
+											    due_by_days=@due_by_days,due_in_days=@due_in_days ,currency_code=@currency_code ,
+											    total=@total,bcy_total=@bcy_total,total_invoiced_amount=@total_invoiced_amount,
+												last_modified_time=@last_modified_time,
+												is_emailed=@is_emailed,quantity=@quantity,quantity_invoiced=@quantity_invoiced,
+												quantity_packed=@quantity_packed,quantity_shipped=@quantity_shipped,
+												order_status=@order_status,invoiced_status=@invoiced_status,
+												paid_status=@paid_status,shipped_status=@shipped_status,
+												salesperson_name=@salesperson_name,balance=@balance,
+												delivery_method=@delivery_method,IsDel=@IsDel,
+												LastChangeDt=@LastChangeDt
+                                WHERE salesorder_id=@salesorder_id";
                     break;
                 case "T_BOOKS_SALDTL":
-                    _result = @"";
+                    _result = @"UPDATE dbo.T_BOOKS_SALDTL SET Orderdate=@Orderdate,item_id=@item_id,warehouse_name=@warehouse_name,
+													 sku=@sku,name=@name,group_name=@group_name,description=@description,
+													 bcy_rate=@bcy_rate,rate=@rate,quantity=@quantity,unit=@unit,
+													 discount_amount=@discount_amount,discount=@discount,
+													 tax_type=@tax_type,tax_exemption_code=@tax_exemption_code,
+													 item_total=@item_total,item_sub_total=@item_sub_total,product_type=@product_type,
+												     line_item_type=@line_item_type,item_type=@item_type,quantity_invoiced=@quantity_invoiced,
+													 quantity_packed=@quantity_packed,quantity_shipped=@quantity_shipped,
+													 IsDel=@IsDel,LastChangeDt=@LastChangeDt
+                                  WHERE salesorder_id=@salesorder_id AND line_item_id=@line_item_id";
                     break;
                 case "T_BOOKS_SAL_Check":
-                    _result = @"";
+                    _result = @"UPDATE dbo.T_BOOKS_SAL SET  customer_name=@customer_name,salesorder_number=@salesorder_number,
+												reference_number=@reference_number,Orderdate=@Orderdate ,
+												shipment_date=@shipment_date,currency_code=@currency_code ,
+											    total=@total,bcy_total=@bcy_total,last_modified_time=@last_modified_time,
+												quantity=@quantity,quantity_invoiced=@quantity_invoiced,
+												quantity_packed=@quantity_packed,quantity_shipped=@quantity_shipped,
+												order_status=@order_status,invoiced_status=@invoiced_status,
+												paid_status=@paid_status,shipped_status=@shipped_status,
+												balance=@balance,delivery_method=@delivery_method,IsDel=@IsDel,
+												LastChangeDt=@LastChangeDt
+                                WHERE salesorder_id=@salesorder_id";
                     break;
                 case "T_BOOKS_SALDTL_Check":
-                    _result = @"";
+                    _result = @"UPDATE dbo.T_BOOKS_SALDTL SET item_id=@item_id,warehouse_name=@warehouse_name,
+													 sku=@sku,name=@name,group_name=@group_name,description=@description,
+													 bcy_rate=@bcy_rate,rate=@rate,quantity=@quantity,unit=@unit,
+													 discount_amount=@discount_amount,discount=@discount,
+													 tax_type=@tax_type,tax_exemption_code=@tax_exemption_code,
+													 item_total=@item_total,item_sub_total=@item_sub_total,product_type=@product_type,
+												     line_item_type=@line_item_type,item_type=@item_type,quantity_invoiced=@quantity_invoiced,
+													 quantity_packed=@quantity_packed,quantity_shipped=@quantity_shipped,
+													 IsDel=@IsDel,LastChangeDt=@LastChangeDt
+                                WHERE salesorder_id=@salesorder_id AND line_item_id=@line_item_id";
                     break;
             }
             return _result;
         }
 
+        /// <summary>
+        /// 对需要进行更新IsDel=0的记录进行操作
+        /// </summary>
+        /// <param name="typeid">0:对表头进行更新操作 1:对表体进行更新操作</param>
+        /// <param name="uplist">更新主键值;表头=>salesorder_id 表体=>line_item_id</param>
+        /// <returns></returns>
+        public string UpIsDelRecord(int typeid,string uplist)
+        {
+            //对表头进行更新操作
+            if (typeid == 0)
+            {
+                //TODO:1.对表头IsDel字段更新 2.根据salesorder_id对应的表体IsDel字段更新
+                _result = $@"UPDATE dbo.T_BOOKS_SAL SET IsDel=0
+                             WHERE salesorder_id IN ({uplist})
+                            
+                            UPDATE A SET ISDEL=0
+                            FROM dbo.T_BOOKS_SALDTL A
+                            WHERE A.salesorder_id IN  ({uplist})                           
+                            ";
+            }
+            //对表体进行更新操作
+            else
+            {
+                _result = $@"UPDATE dbo.T_BOOKS_SALDTL SET IsDel=0
+                             WHERE line_item_id IN ({uplist})";
+            }
 
+            return _result;
+        }
 
     }
 }

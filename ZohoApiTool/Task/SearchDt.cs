@@ -88,5 +88,17 @@ namespace ZohoApiTool.Task
             return dt;
         }
 
+        /// <summary>
+        /// 对‘不存在’的记录进行更新IsDel标记--'监盘操作'
+        /// </summary>
+        /// <param name="typeid"></param>
+        /// <param name="uplist"></param>
+        /// <returns></returns>
+        public bool UpIsDelRecord(int typeid, string uplist)
+        {
+            var sqlscript = sqlList.UpIsDelRecord(typeid, uplist);
+            return Generdt(sqlscript);
+        }
+
     }
 }

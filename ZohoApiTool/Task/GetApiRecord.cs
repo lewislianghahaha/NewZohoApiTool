@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Runtime.InteropServices;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 
@@ -74,7 +73,7 @@ namespace ZohoApiTool.Task
         {
             try
             {
-                LogHelper.WriteLog("获取刷新令牌开始");
+                LogHelper.WriteLog("获取表头API开始");
 
                 _headDt = tempdt.Clone();
 
@@ -95,7 +94,7 @@ namespace ZohoApiTool.Task
                 var response = client.Execute(request);
                 if (Convert.ToString(response.StatusCode) == "OK") //throw new Exception($"调用Api出现异常,原因:{response.ErrorMessage}");
                 {
-                    GetApiJsonRecord(1,response.Content);
+                    GetApiJsonRecord(1, response.Content);
                     LogHelper.WriteLog($"已获取API返回记录,行数'{_headDt.Rows.Count}");
                 }
             }
@@ -118,7 +117,7 @@ namespace ZohoApiTool.Task
         {
             try
             {
-                LogHelper.WriteLog("获取刷新令牌开始");
+                LogHelper.WriteLog("获取表体API开始");
 
                 _dtldt = tempdt.Clone();
 
@@ -138,6 +137,7 @@ namespace ZohoApiTool.Task
                 //执行调用API
                 var response = client.Execute(request);
 
+                //若没有正常API返回,即将_dtldt设置为空白行返回
                 if (Convert.ToString(response.StatusCode) == "OK") //throw new Exception($"调用Api出现异常,原因:{response.ErrorMessage}");
                 {
                     GetApiJsonRecord(GlobalClasscs.RmMessage.Ischeck == 0 ? 3 : 2, response.Content);
@@ -342,6 +342,5 @@ namespace ZohoApiTool.Task
                 var c = _dtldt.Copy();
             }
         }
-
     }
 }

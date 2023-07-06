@@ -29,10 +29,9 @@ namespace ZohoApiTool.Task
                 LogHelper.WriteLog("获取刷新令牌开始");
 
                 //todo:设置API 刷新令牌URL 地址
-                var serviceUrl = $@"https://accounts.zoho.com/oauth/v2/token?refresh_token=1000.de999e5653faa9642fbce6501a337516.bb785e602be2b63616c88eb0d3ce2d19
-                                &client_id=1000.VCUSUC900CXB0UEOT18NV3XS1L3EQT
-                                &client_secret=fa638b638a7ff82e42bdfb4a9b5271a4a816b8f027
-                                &redirect_uri=http://www.zoho.com/Books&grant_type=refresh_token";
+                var serviceUrl = $@"https://accounts.zoho.com/oauth/v2/token?refresh_token=1000.de999e5653faa9642fbce6501a337516.bb785e602be2b63616c88eb0d3ce2d19"+
+                                    "&client_id=1000.VCUSUC900CXB0UEOT18NV3XS1L3EQT"+
+                                    "&client_secret=fa638b638a7ff82e42bdfb4a9b5271a4a816b8f027&redirect_uri=http://www.zoho.com/Books&grant_type=refresh_token";
 
                 //todo:一定要这一句,不然会出现:"未能创建SSL/TLS安全通道"异常
                 System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
@@ -181,15 +180,15 @@ namespace ZohoApiTool.Task
                         newrow[0] = Convert.ToString(ordJToken["salesorder_id"]);           //获取单据主键ID
                         newrow[1] = Convert.ToString(ordJToken["customer_name"]);           //客户名称
                         newrow[2] = Convert.ToString(ordJToken["email"]);                   //邮箱
-                        newrow[3] = Convert.ToDateTime(ordJToken["delivery_date"]);         //交货日期
+                        newrow[3] = Convert.ToString(ordJToken["delivery_date"]);         //交货日期
                         newrow[4] = Convert.ToString(ordJToken["company_name"]);            //公司名称
                         newrow[5] = Convert.ToString(ordJToken["salesorder_number"]);       //单据编码
                         newrow[6] = Convert.ToString(ordJToken["reference_number"]);        //参考号码
-                        newrow[7] = Convert.ToDateTime(ordJToken["date"]);                  //单据日期
-                        newrow[8] = Convert.ToDateTime(ordJToken["shipment_date"]);         //船务日期
-                        newrow[9] = Convert.ToInt32(ordJToken["shipment_days"]);            //船务天数
-                        newrow[10] = Convert.ToInt32(ordJToken["due_by_days"]);             //按天计算
-                        newrow[11] = Convert.ToInt32(ordJToken["due_in_days"]);             //截止日期:天
+                        newrow[7] = Convert.ToString(ordJToken["date"]);                  //单据日期
+                        newrow[8] = Convert.ToString(ordJToken["shipment_date"]);         //船务日期
+                        newrow[9] = Convert.ToString(ordJToken["shipment_days"]);            //船务天数
+                        newrow[10] = Convert.ToString(ordJToken["due_by_days"]);             //按天计算
+                        newrow[11] = Convert.ToString(ordJToken["due_in_days"]);             //截止日期:天
                         newrow[12] = Convert.ToString(ordJToken["currency_code"]);          //货币
                         newrow[13] = Convert.ToDecimal(ordJToken["total"]);                 //Sub Total
                         newrow[14] = Convert.ToDecimal(ordJToken["bcy_total"]);             //Total
@@ -214,11 +213,11 @@ namespace ZohoApiTool.Task
                 }
                 else if (typeid == 2)
                 {
-                    //todo:获取JSON中‘salesorder_id’ 及 ‘date’ 对应记录
+                    //获取JSON中‘salesorder_id’ 及 ‘date’ 对应记录
                     var salesorderid = Convert.ToString(obj["salesorder"]["salesorder_id"]);
                     var salesdt = Convert.ToDateTime(obj["salesorder"]["date"]);
 
-                    //todo:循环获取表体API返回JSON
+                    //循环获取表体API返回JSON
                     var ords = (JArray)obj["salesorder"]["line_items"];
 
                     foreach (var ordJToken in ords)
@@ -226,7 +225,7 @@ namespace ZohoApiTool.Task
                         var newrow = _dtldt.NewRow();
                         newrow[0] = Convert.ToString(salesorderid);                     //salesorder_id
                         newrow[1] = Convert.ToString(ordJToken["line_item_id"]);        //获取明细行主键ID
-                        newrow[2] = Convert.ToDateTime(salesdt);                        //单据日期
+                        newrow[2] = salesdt;                                            //单据日期
                         newrow[3] = Convert.ToString(ordJToken["item_id"]);             //物料ID
                         newrow[4] = Convert.ToString(ordJToken["warehouse_name"]);      //仓库名称
                         newrow[5] = Convert.ToString(ordJToken["sku"]);                 //sku名称
@@ -238,7 +237,7 @@ namespace ZohoApiTool.Task
                         newrow[11] = Convert.ToInt32(ordJToken["quantity"]);            //数量
                         newrow[12] = Convert.ToString(ordJToken["unit"]);               //单位
                         newrow[13] = Convert.ToDecimal(ordJToken["discount_amount"]);   //折扣金额
-                        newrow[14] = Convert.ToDecimal(ordJToken["discount"]);          //折扣
+                        newrow[14] = Convert.ToString(ordJToken["discount"]);          //折扣
                         newrow[15] = Convert.ToString(ordJToken["tax_type"]);           //税类型
                         newrow[16] = Convert.ToString(ordJToken["tax_exemption_code"]); //免税代码
                         newrow[17] = Convert.ToDecimal(ordJToken["item_total"]);        //总金额
@@ -268,8 +267,8 @@ namespace ZohoApiTool.Task
                     var customer = Convert.ToString(obj["salesorder"]["customer_name"]);                //客户名称
                     var salesorder = Convert.ToString(obj["salesorder"]["salesorder_number"]);          //单据编码
                     var referenceNumber = Convert.ToString(obj["salesorder"]["reference_number"]);      //参考号码
-                    var salesdt = Convert.ToDateTime(obj["salesorder"]["date"]);                        //单据日期
-                    var shipmentDate = Convert.ToDateTime(obj["salesorder"]["shipment_date"]);          //船务日期
+                    var salesdt = Convert.ToString(obj["salesorder"]["date"]);                          //单据日期
+                    var shipmentDate = Convert.ToString(obj["salesorder"]["shipment_date"]);            //船务日期
                     var currencyCode = Convert.ToString(obj["salesorder"]["currency_code"]);            //货币
                     var total = Convert.ToDecimal(obj["salesorder"]["total"]);                          //Sub Total
                     var bcyTotal = Convert.ToDecimal(obj["salesorder"]["bcy_total"]);                   //Total
@@ -348,7 +347,7 @@ namespace ZohoApiTool.Task
             }
             catch (Exception ex)
             {
-                LogHelper.WriteErrorLog("JSON整理相关记录集出现异常,原因:", ex);
+                LogHelper.WriteErrorLog($"{typeid}-JSON整理相关记录集出现异常,原因:", ex);
             }
         }
     }

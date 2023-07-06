@@ -55,23 +55,42 @@ namespace ZohoApiTool.Task
                 //获取T_BOOKS_SALDTL 表体信息-用作比较
                 var dtldt = searchDt.GetBooksSalDetailRecord();
 
-                var bb = DateTime.Today.DayOfWeek.ToString();
+                //var bb = DateTime.Today.DayOfWeek.ToString();  //Thursday
 
                 //通过zoho Api获取相关信息
                 //获取‘刷新令牌’
                 var accesstoken = getApi.GetAccessToken();
 
                 //////////////////////////////数据整合部份/////////////////////////////////////
-                //当判断数据表没有任何记录时,直接将API返回的表头 表体记录集,整理后分别插入至对应数据表
+                //todo:当判断数据表没有任何记录时,直接将API返回的表头 表体记录集,整理后分别插入至对应数据表
                 if (Convert.ToInt32(initialDt.Rows[0][0]) == 0)
                 {
                     GlobalClasscs.RmMessage.Ischeck = 1;
+
+                    /////////////////////////////API数据收集部份/////////////////////////////////
+
+                    //获取zoho api表头返回记录
+                    apiheaddt.Merge(getApi.GetSalHeadRecord(apiheaddt, accesstoken));
+
+                    var b = apiheaddt.Copy();
+
+                   /* //循环通过zoho api表体返回DT记录集
+                    foreach (DataRow rows in apiheaddt.Rows)
+                    {
+                        var a11 = Convert.ToString(rows[0]);
+                        apidtldt.Merge(getApi.GetSalDetailRecord(apidtldt, Convert.ToString(rows[0]), accesstoken));
+                    }
+
+                    var a = apidtldt.Copy();*/
+
+                    /////////////////////////////////////数据处理////////////////////////////////////////////
+
                     //分别将表头 表体数据插入至insertDt 及 insertDtlDt内
                     insertDt.Merge(MakeRecordDtToDb(0, 1,insertDt, apiheaddt));
-                    insertDtlDt.Merge(MakeRecordDtToDb(1, 1,insertDtlDt, apidtldt));
+                   // insertDtlDt.Merge(MakeRecordDtToDb(1, 1,insertDtlDt, apidtldt));
                 }
-                //todo:执行‘监盘机器人操作’ - 每周日执行
-                else if (DateTime.Today.DayOfWeek.ToString() == "Sunday")
+                //执行‘监盘机器人操作’ - 每周日执行
+                else if (Convert.ToInt32(initialDt.Rows[0][0])>0 && DateTime.Today.DayOfWeek.ToString() == "Sunday")
                 {
                     GlobalClasscs.RmMessage.Ischeck = 0;
 
@@ -91,11 +110,11 @@ namespace ZohoApiTool.Task
                         var lineitemid = Convert.ToString(rows[1]);
 
                         //todo:判断若salesorderid 或 lineitemid 在deldt内存在,即continue
-                        if (deldt.Select("salesorder_id='" + salesorderid + "'").Length>0) continue;
-                        if (deldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "'").Length>0) continue;
+                        if (deldt.Select("salesorder_id='" + salesorderid + "' and typeid='0'").Length>0) continue;
+                        if (deldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "' and typeid='1'").Length>0) continue;
 
                         //todo:1.将salesorderid 放到 checkdtldt内查找,若发现不存在,即直接将salesorderid插入至deldt内,并continue
-                        if (checkdtldt.Select("salesorder_id='"+salesorderid+"'").Length == 0)
+                        if (checkdtldt.Select("salesorder_id='" + salesorderid + "'").Length == 0)
                         {
                             //插入至deldt内
                             deldt.Merge(InsertDelDt(deldt, 0, salesorderid, ""));
@@ -108,8 +127,8 @@ namespace ZohoApiTool.Task
                             deldt.Merge(InsertDelDt(deldt, 1, salesorderid, lineitemid));
                             continue;
                         }
-                        //todo:3.若循环的salesorderid 及 lineitemid都在checkdtldt有记录,即整理后进行更新
-                        else //if(checkdtldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "'").Length >0)
+                        //todo:3.若循环的salesorderid 及 lineitemid都在checkdtldt有记录,即整理后数量,最后更新使用
+                        else if(checkdtldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "'").Length >0)
                         {
                             var dtlrows = checkdtldt.Select("salesorder_id='" + salesorderid + "' and line_item_id='" + lineitemid + "'");
 
@@ -123,18 +142,19 @@ namespace ZohoApiTool.Task
                     var c2 = upDt.Copy();
                     var c3 = updtlDt.Copy();
                 }
-                //todo:日常操作(除周日外执行)-循环将ApiDt放到HeadDt,DtlDt内查找,无->插入 有->更新
-                else
+                //日常操作(除周日外执行)-todo:循环将ApiHeadDt,ApiDtldt放到HeadDt,DtlDt内查找,无->插入 有->更新
+                else if(Convert.ToInt32(initialDt.Rows[0][0]) > 0 && DateTime.Today.DayOfWeek.ToString() != "Sunday")
                 {
                     GlobalClasscs.RmMessage.Ischeck = 1;
 
                     /////////////////////////////API数据收集部份/////////////////////////////////
+                    
                     //获取zoho api表头返回记录
                     apiheaddt.Merge(getApi.GetSalHeadRecord(apiheaddt, accesstoken));
 
                     var b = apiheaddt.Copy();
 
-                    //循环获取zoho api表体返回记录
+                    //循环通过zoho api表体返回DT记录集
                     foreach (DataRow rows in apiheaddt.Rows)
                     {
                         var a11 = Convert.ToString(rows[0]);
@@ -190,8 +210,8 @@ namespace ZohoApiTool.Task
                 //todo:执行‘插入’ 及 ‘更新’操作
                 if (insertDt.Rows.Count > 0)
                     ImportDtToDb("T_BOOKS_SAL", insertDt);
-                if (insertDtlDt.Rows.Count > 0)
-                    ImportDtToDb("T_BOOKS_SALDTL", insertDtlDt);
+              /*  if (insertDtlDt.Rows.Count > 0)
+                    ImportDtToDb("T_BOOKS_SALDTL", insertDtlDt);*/
 
                 //todo:'日常操作'更新使用
                 if (upDt.Rows.Count > 0 && GlobalClasscs.RmMessage.Ischeck==1)
@@ -283,64 +303,71 @@ namespace ZohoApiTool.Task
         /// <returns></returns>
         private DataTable MakeCheckDt(int typeid,DataTable tempdt,DataRow[] row)
         {
-            if (typeid == 0)
+            try
             {
-                var newrow = tempdt.NewRow();
-                newrow[0] = Convert.ToString(row[0]);       //salesorder_id
-                newrow[1] = Convert.ToString(row[1]);       //客户名称
-                newrow[5] = Convert.ToString(row[2]);       //单据编码
-                newrow[6] = Convert.ToString(row[3]);       //参考号码
-                newrow[7] = Convert.ToDateTime(row[4]);     //单据日期
-                newrow[8] = Convert.ToDateTime(row[5]);     //船务日期
-                newrow[12] = Convert.ToString(row[6]);      //货币
-                newrow[13] = Convert.ToDecimal(row[7]);     //Sub Total
-                newrow[14] = Convert.ToDecimal(row[8]);     //Total
-                newrow[17] = Convert.ToDateTime(row[9]);    //最后一次修改日期
-                newrow[19] = Convert.ToDecimal(row[10]);    //总数量
-                newrow[20] = Convert.ToDecimal(row[11]);    //发票总数量
-                newrow[21] = Convert.ToDecimal(row[12]);    //仓库总数量
-                newrow[22] = Convert.ToDecimal(row[13]);    //发送总数量
-                newrow[23] = Convert.ToString(row[14]);     //单据状态
-                newrow[24] = Convert.ToString(row[15]);     //Invoice状态
-                newrow[25] = Convert.ToString(row[16]);     //Payment状态
-                newrow[26] = Convert.ToString(row[17]);     //Shipment状态
-                newrow[28] = Convert.ToDecimal(row[18]);    //余额
-                newrow[29] = Convert.ToString(row[19]);     //交货方式
-                newrow[30] = 1;                             //是否删除(0:是 1:否)
-                newrow[32] = DateTime.Now.Date;             //最后一次操作日期
+                if (typeid == 0)
+                {
+                    var newrow = tempdt.NewRow();
+                    newrow[0] = Convert.ToString(row[0]);       //salesorder_id
+                    newrow[1] = Convert.ToString(row[1]);       //客户名称
+                    newrow[5] = Convert.ToString(row[2]);       //单据编码
+                    newrow[6] = Convert.ToString(row[3]);       //参考号码
+                    newrow[7] = Convert.ToString(row[4]);       //单据日期
+                    newrow[8] = Convert.ToString(row[5]);       //船务日期
+                    newrow[12] = Convert.ToString(row[6]);      //货币
+                    newrow[13] = Convert.ToDecimal(row[7]);     //Sub Total
+                    newrow[14] = Convert.ToDecimal(row[8]);     //Total
+                    newrow[17] = Convert.ToString(row[9]);      //最后一次修改日期
+                    newrow[19] = Convert.ToDecimal(row[10]);    //总数量
+                    newrow[20] = Convert.ToDecimal(row[11]);    //发票总数量
+                    newrow[21] = Convert.ToDecimal(row[12]);    //仓库总数量
+                    newrow[22] = Convert.ToDecimal(row[13]);    //发送总数量
+                    newrow[23] = Convert.ToString(row[14]);     //单据状态
+                    newrow[24] = Convert.ToString(row[15]);     //Invoice状态
+                    newrow[25] = Convert.ToString(row[16]);     //Payment状态
+                    newrow[26] = Convert.ToString(row[17]);     //Shipment状态
+                    newrow[28] = Convert.ToDecimal(row[18]);    //余额
+                    newrow[29] = Convert.ToString(row[19]);     //交货方式
+                    newrow[30] = 1;                             //是否删除(0:是 1:否)
+                    newrow[32] = DateTime.Now.Date.ToString("yyyy-MM-dd HH:mm:ss.fff");//最后一次操作日期
 
-                tempdt.Rows.Add(newrow);
+                    tempdt.Rows.Add(newrow);
+                }
+                else
+                {
+                    var newrow = tempdt.NewRow();
+                    newrow[0] = Convert.ToString(row[0]);       //fk(T_BOOKS_SAL外键)
+                    newrow[1] = Convert.ToString(row[20]);      //pk
+                    newrow[3] = Convert.ToString(row[21]);      //物料ID
+                    newrow[4] = Convert.ToString(row[22]);      //仓库名称
+                    newrow[5] = Convert.ToString(row[23]);      //sku名称
+                    newrow[6] = Convert.ToString(row[24]);      //物料名称
+                    newrow[7] = Convert.ToString(row[25]);      //组别名称
+                    newrow[8] = Convert.ToString(row[26]);      //描述
+                    newrow[9] = Convert.ToDecimal(row[27]);     //汇率
+                    newrow[10] = Convert.ToDecimal(row[28]);    //汇率(显示使用)
+                    newrow[11] = Convert.ToInt32(row[29]);      //数量
+                    newrow[12] = Convert.ToString(row[30]);     //单位
+                    newrow[13] = Convert.ToDecimal(row[31]);    //折扣金额
+                    newrow[14] = Convert.ToString(row[32]);     //折扣
+                    newrow[15] = Convert.ToString(row[33]);     //税类型
+                    newrow[16] = Convert.ToString(row[34]);     //免税代码
+                    newrow[17] = Convert.ToDecimal(row[35]);    //总金额
+                    newrow[18] = Convert.ToDecimal(row[36]);    //项目合计
+                    newrow[19] = Convert.ToString(row[37]);     //生产类别
+                    newrow[20] = Convert.ToString(row[38]);     //行物料类别
+                    newrow[21] = Convert.ToString(row[39]);     //物料类别
+                    newrow[22] = Convert.ToInt32(row[40]);      //Status-Invoiced
+                    newrow[23] = Convert.ToInt32(row[41]);      //Status-Packed
+                    newrow[24] = Convert.ToInt32(row[42]);      //Status-Shipped
+                    newrow[25] = 1;                             //是否删除(0:是 1:否)
+                    newrow[26] = DateTime.Now.Date.ToString("yyyy-MM-dd HH:mm:ss.fff");//最后一次操作日期
+                    tempdt.Rows.Add(newrow);
+                }
             }
-            else
+            catch(Exception ex)
             {
-                var newrow = tempdt.NewRow();
-                newrow[0] = Convert.ToString(row[0]);       //fk(T_BOOKS_SAL外键)
-                newrow[1] = Convert.ToString(row[20]);      //pk
-                newrow[3] = Convert.ToString(row[21]);      //物料ID
-                newrow[4] = Convert.ToString(row[22]);      //仓库名称
-                newrow[5] = Convert.ToString(row[23]);      //sku名称
-                newrow[6] = Convert.ToString(row[24]);      //物料名称
-                newrow[7] = Convert.ToString(row[25]);      //组别名称
-                newrow[8] = Convert.ToString(row[26]);      //描述
-                newrow[9] = Convert.ToDecimal(row[27]);     //汇率
-                newrow[10] = Convert.ToDecimal(row[28]);    //汇率(显示使用)
-                newrow[11] = Convert.ToInt32(row[29]);      //数量
-                newrow[12] = Convert.ToString(row[30]);     //单位
-                newrow[13] = Convert.ToDecimal(row[31]);    //折扣金额
-                newrow[14] = Convert.ToDecimal(row[32]);    //折扣
-                newrow[15] = Convert.ToString(row[33]);     //税类型
-                newrow[16] = Convert.ToString(row[34]);     //免税代码
-                newrow[17] = Convert.ToDecimal(row[35]);    //总金额
-                newrow[18] = Convert.ToDecimal(row[36]);    //项目合计
-                newrow[19] = Convert.ToString(row[37]);     //生产类别
-                newrow[20] = Convert.ToString(row[38]);     //行物料类别
-                newrow[21] = Convert.ToString(row[39]);     //物料类别
-                newrow[22] = Convert.ToInt32(row[40]);      //Status-Invoiced
-                newrow[23] = Convert.ToInt32(row[41]);      //Status-Packed
-                newrow[24] = Convert.ToInt32(row[42]);      //Status-Shipped
-                newrow[25] = 1;                             //是否删除(0:是 1:否)
-                newrow[26] = DateTime.Now.Date;             //最后一次操作日期
-                tempdt.Rows.Add(newrow);
+                LogHelper.WriteErrorLog("拆分checkDtldt表出现异常,原因:", ex);
             }
 
             return tempdt;
@@ -418,10 +445,11 @@ namespace ZohoApiTool.Task
                 {
                     for (var i = 0; i < sourcedt.Rows.Count; i++)
                     {
+                        var now1 = DateTime.Now;
+                        var newrow = tempdt.NewRow();
+
                         for (var j = 0; j < tempdt.Columns.Count; j++)
                         {
-                            var newrow = tempdt.NewRow();
-
                             switch (j)
                             {
                                 //是否删除(0:是 1:否)
@@ -436,15 +464,14 @@ namespace ZohoApiTool.Task
                                 case 31:
                                 //最后一次操作日期(PS:记录最后一次更新日期,更新时使用;每次Up可覆盖更新)
                                 case 32:
-                                    newrow[j] = DateTime.Now.Date;
+                                    newrow[j] = now1.ToString("yyyy-MM-dd HH:mm:ss.fff");
                                     break;
                                 default:
                                     newrow[j] = sourcedt.Rows[i][j];
                                     break;
                             }
-
-                            tempdt.Rows.Add(newrow);
                         }
+                        tempdt.Rows.Add(newrow);
                     }
                 }
                 //1:表体插入
@@ -452,10 +479,12 @@ namespace ZohoApiTool.Task
                 {
                     for (var i = 0; i < sourcedt.Rows.Count; i++)
                     {
+                        var now1 = DateTime.Now;
+                        var newrow = tempdt.NewRow();
+
+
                         for (var j = 0; j < tempdt.Columns.Count; j++)
                         {
-                            var newrow = tempdt.NewRow();
-
                             switch (j)
                             {
                                 //是否删除(0:是 1:否)
@@ -470,15 +499,14 @@ namespace ZohoApiTool.Task
                                 case 26:
                                 //最后一次操作日期(PS:记录最后一次更新日期,更新时使用;每次Up可覆盖更新)
                                 case 27:
-                                    newrow[j] = DateTime.Now.Date;
+                                    newrow[j] = now1.ToString("yyyy-MM-dd HH:mm:ss.fff");
                                     break;
                                 default:
                                     newrow[j] = sourcedt.Rows[i][j];
                                     break;
                             }
-
-                            tempdt.Rows.Add(newrow);
                         }
+                        tempdt.Rows.Add(newrow);
                     }
                 }
                 //2:表头更新
@@ -486,10 +514,11 @@ namespace ZohoApiTool.Task
                 {
                     for (var i = 0; i < sourcedt.Rows.Count; i++)
                     {
+                        var now1 = DateTime.Now;
+                        var newrow = tempdt.NewRow();
+
                         for (var j = 0; j < tempdt.Columns.Count; j++)
                         {
-                            var newrow = tempdt.NewRow();
-
                             switch (j)
                             {
                                 //是否删除(0:是 1:否)
@@ -502,15 +531,14 @@ namespace ZohoApiTool.Task
                                 //    break;
                                 //最后一次操作日期(PS:记录最后一次更新日期,更新时使用;每次Up可覆盖更新)
                                 case 32:
-                                    newrow[j] = DateTime.Now.Date;
+                                    newrow[j] = now1.ToString("yyyy-MM-dd HH:mm:ss.fff");
                                     break;
                                 default:
                                     newrow[j] = sourcedt.Rows[i][j];
                                     break;
                             }
-
-                            tempdt.Rows.Add(newrow);
                         }
+                        tempdt.Rows.Add(newrow);
                     }
                 }
                 //3:表体更新
@@ -518,10 +546,11 @@ namespace ZohoApiTool.Task
                 {
                     for (var i = 0; i < sourcedt.Rows.Count; i++)
                     {
+                        var now1 = DateTime.Now;
+                        var newrow = tempdt.NewRow();
+
                         for (var j = 0; j < tempdt.Columns.Count; j++)
                         {
-                            var newrow = tempdt.NewRow();
-
                             switch (j)
                             {
                                 //是否删除(0:是 1:否)
@@ -534,18 +563,16 @@ namespace ZohoApiTool.Task
                                 //    break;
                                 //最后一次操作日期(PS:记录最后一次更新日期,更新时使用;每次Up可覆盖更新)
                                 case 27:
-                                    newrow[j] = DateTime.Now.Date;
+                                    newrow[j] = now1.ToString("yyyy-MM-dd HH:mm:ss.fff");
                                     break;
                                 default:
                                     newrow[j] = sourcedt.Rows[i][j];
                                     break;
                             }
-
-                            tempdt.Rows.Add(newrow);
                         }
+                        tempdt.Rows.Add(newrow);
                     }
                 }
-
             }
             catch (Exception ex)
             {
@@ -563,7 +590,7 @@ namespace ZohoApiTool.Task
         public void ImportDtToDb(string tableName, DataTable dt)
         {
             var sqlcon = conDb.GetConnection();
-            // sqlcon.Open(); 若返回一个SqlConnection的话,必须要显式打开 
+             sqlcon.Open(); //若返回一个SqlConnection的话,必须要显式打开 
             //注:1)要插入的DataTable内的字段数据类型必须要与数据库内的一致;并且要按数据表内的字段顺序 2)SqlBulkCopy类只提供将数据写入到数据库内
             using (var sqlBulkCopy = new SqlBulkCopy(sqlcon))
             {
@@ -573,7 +600,7 @@ namespace ZohoApiTool.Task
                 sqlBulkCopy.WriteToServer(dt);               //数据导入数据库
                 sqlBulkCopy.Close();                        //关闭连接 
             }
-            // sqlcon.Close();
+            //sqlcon.Close();
         }
 
         /// <summary>
@@ -645,23 +672,23 @@ namespace ZohoApiTool.Task
             switch (tablename)
             {
                 case "T_BOOKS_SAL":
-                    da.UpdateCommand.Parameters.Add("@salesorder_id", SqlDbType.NVarChar, 200, "salesorder_id");
-                    da.UpdateCommand.Parameters.Add("@customer_name",SqlDbType.NVarChar,200, "customer_name");
+                    da.UpdateCommand.Parameters.Add("@salesorder_id", SqlDbType.NVarChar, 500, "salesorder_id");
+                    da.UpdateCommand.Parameters.Add("@customer_name",SqlDbType.NVarChar,500, "customer_name");
                     da.UpdateCommand.Parameters.Add("@email", SqlDbType.NVarChar, 100, "email");
-                    da.UpdateCommand.Parameters.Add("@delivery_date", SqlDbType.DateTime, 10, "delivery_date");
-                    da.UpdateCommand.Parameters.Add("@company_name", SqlDbType.NVarChar,100, "company_name");
+                    da.UpdateCommand.Parameters.Add("@delivery_date", SqlDbType.NVarChar, 100, "delivery_date");
+                    da.UpdateCommand.Parameters.Add("@company_name", SqlDbType.NVarChar,500, "company_name");
                     da.UpdateCommand.Parameters.Add("@salesorder_number", SqlDbType.NVarChar, 100, "salesorder_number");
-                    da.UpdateCommand.Parameters.Add("@reference_number", SqlDbType.NVarChar, 100, "reference_number");
-                    da.UpdateCommand.Parameters.Add("@Orderdate", SqlDbType.DateTime, 10, "Orderdate");
-                    da.UpdateCommand.Parameters.Add("@shipment_date", SqlDbType.DateTime, 10, "shipment_date");
-                    da.UpdateCommand.Parameters.Add("@shipment_days", SqlDbType.Int, 8, "shipment_days");
-                    da.UpdateCommand.Parameters.Add("@due_by_days", SqlDbType.Int, 8, "due_by_days");
-                    da.UpdateCommand.Parameters.Add("@due_in_days", SqlDbType.Int, 8, "due_in_days");
+                    da.UpdateCommand.Parameters.Add("@reference_number", SqlDbType.NVarChar, 1000, "reference_number");
+                    da.UpdateCommand.Parameters.Add("@Orderdate", SqlDbType.NVarChar, 100, "Orderdate");
+                    da.UpdateCommand.Parameters.Add("@shipment_date", SqlDbType.NVarChar, 100, "shipment_date");
+                    da.UpdateCommand.Parameters.Add("@shipment_days", SqlDbType.NVarChar, 100, "shipment_days");
+                    da.UpdateCommand.Parameters.Add("@due_by_days", SqlDbType.NVarChar, 100, "due_by_days");
+                    da.UpdateCommand.Parameters.Add("@due_in_days", SqlDbType.NVarChar, 100, "due_in_days");
                     da.UpdateCommand.Parameters.Add("@currency_code", SqlDbType.NVarChar, 100, "currency_code");
                     da.UpdateCommand.Parameters.Add("@total", SqlDbType.Decimal, 4, "total");
                     da.UpdateCommand.Parameters.Add("@bcy_total", SqlDbType.Decimal, 4, "bcy_total");
                     da.UpdateCommand.Parameters.Add("@total_invoiced_amount", SqlDbType.Decimal, 4, "total_invoiced_amount");
-                    da.UpdateCommand.Parameters.Add("@last_modified_time", SqlDbType.DateTime, 10, "last_modified_time");
+                    da.UpdateCommand.Parameters.Add("@last_modified_time", SqlDbType.NVarChar, 100, "last_modified_time");
                     da.UpdateCommand.Parameters.Add("@is_emailed", SqlDbType.NVarChar, 100, "is_emailed");
                     da.UpdateCommand.Parameters.Add("@quantity", SqlDbType.Decimal, 4, "quantity");
                     da.UpdateCommand.Parameters.Add("@quantity_invoiced", SqlDbType.Decimal, 4, "quantity_invoiced");
@@ -675,12 +702,12 @@ namespace ZohoApiTool.Task
                     da.UpdateCommand.Parameters.Add("@balance", SqlDbType.Decimal, 4, "balance");
                     da.UpdateCommand.Parameters.Add("@delivery_method", SqlDbType.NVarChar, 100, "delivery_method");
                     da.UpdateCommand.Parameters.Add("@IsDel", SqlDbType.Int, 8, "IsDel");
-                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.DateTime, 10, "LastChangeDt");
+                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.NVarChar, 100, "LastChangeDt");
                     break;
                 case "T_BOOKS_SALDTL":
                     da.UpdateCommand.Parameters.Add("@salesorder_id", SqlDbType.NVarChar, 200, "salesorder_id");
                     da.UpdateCommand.Parameters.Add("@line_item_id", SqlDbType.NVarChar, 200, "line_item_id");
-                    da.UpdateCommand.Parameters.Add("@Orderdate", SqlDbType.DateTime, 10, "Orderdate");
+                    da.UpdateCommand.Parameters.Add("@Orderdate", SqlDbType.NVarChar, 100, "Orderdate");
                     da.UpdateCommand.Parameters.Add("@item_id", SqlDbType.NVarChar, 100, "item_id");
                     da.UpdateCommand.Parameters.Add("@warehouse_name", SqlDbType.NVarChar, 200, "warehouse_name");
                     da.UpdateCommand.Parameters.Add("@sku", SqlDbType.NVarChar, 200, "sku");
@@ -692,7 +719,7 @@ namespace ZohoApiTool.Task
                     da.UpdateCommand.Parameters.Add("@quantity", SqlDbType.Int, 8, "quantity");
                     da.UpdateCommand.Parameters.Add("@unit", SqlDbType.NVarChar, 10, "unit");
                     da.UpdateCommand.Parameters.Add("@discount_amount", SqlDbType.Decimal, 2, "discount_amount");
-                    da.UpdateCommand.Parameters.Add("@discount", SqlDbType.Decimal, 2, "discount");
+                    da.UpdateCommand.Parameters.Add("@discount", SqlDbType.NVarChar, 100, "discount");
                     da.UpdateCommand.Parameters.Add("@tax_type", SqlDbType.NVarChar, 100, "tax_type");
                     da.UpdateCommand.Parameters.Add("@tax_exemption_code", SqlDbType.NVarChar, 200, "tax_exemption_code");
                     da.UpdateCommand.Parameters.Add("@item_total", SqlDbType.Decimal, 2, "item_total");
@@ -704,7 +731,7 @@ namespace ZohoApiTool.Task
                     da.UpdateCommand.Parameters.Add("@quantity_packed", SqlDbType.Int, 8, "quantity_packed");
                     da.UpdateCommand.Parameters.Add("@quantity_shipped", SqlDbType.Int, 8, "quantity_shipped");
                     da.UpdateCommand.Parameters.Add("@IsDel", SqlDbType.Int, 8, "IsDel");
-                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.DateTime, 10, "LastChangeDt");
+                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.NVarChar, 100, "LastChangeDt");
                     break;
                 case "T_BOOKS_SAL_Check":
                     da.UpdateCommand.Parameters.Add("@salesorder_id", SqlDbType.NVarChar, 200, "salesorder_id");
@@ -714,8 +741,8 @@ namespace ZohoApiTool.Task
                     //da.UpdateCommand.Parameters.Add("@company_name", SqlDbType.NVarChar, 100, "company_name");
                     da.UpdateCommand.Parameters.Add("@salesorder_number", SqlDbType.NVarChar, 100, "salesorder_number");
                     da.UpdateCommand.Parameters.Add("@reference_number", SqlDbType.NVarChar, 100, "reference_number");
-                    da.UpdateCommand.Parameters.Add("@Orderdate", SqlDbType.DateTime, 10, "Orderdate");
-                    da.UpdateCommand.Parameters.Add("@shipment_date", SqlDbType.DateTime, 10, "shipment_date");
+                    da.UpdateCommand.Parameters.Add("@Orderdate", SqlDbType.NVarChar, 100, "Orderdate");
+                    da.UpdateCommand.Parameters.Add("@shipment_date", SqlDbType.NVarChar, 100, "shipment_date");
                     //da.UpdateCommand.Parameters.Add("@shipment_days", SqlDbType.Int, 8, "shipment_days");
                     //da.UpdateCommand.Parameters.Add("@due_by_days", SqlDbType.Int, 8, "due_by_days");
                     //da.UpdateCommand.Parameters.Add("@due_in_days", SqlDbType.Int, 8, "due_in_days");
@@ -723,7 +750,7 @@ namespace ZohoApiTool.Task
                     da.UpdateCommand.Parameters.Add("@total", SqlDbType.Decimal, 4, "total");
                     da.UpdateCommand.Parameters.Add("@bcy_total", SqlDbType.Decimal, 4, "bcy_total");
                     //da.UpdateCommand.Parameters.Add("@total_invoiced_amount", SqlDbType.Decimal, 4, "total_invoiced_amount");
-                    da.UpdateCommand.Parameters.Add("@last_modified_time", SqlDbType.DateTime, 10, "last_modified_time");
+                    da.UpdateCommand.Parameters.Add("@last_modified_time", SqlDbType.NVarChar, 100, "last_modified_time");
                     //da.UpdateCommand.Parameters.Add("@is_emailed", SqlDbType.NVarChar, 100, "is_emailed");
                     da.UpdateCommand.Parameters.Add("@quantity", SqlDbType.Decimal, 4, "quantity");
                     da.UpdateCommand.Parameters.Add("@quantity_invoiced", SqlDbType.Decimal, 4, "quantity_invoiced");
@@ -737,7 +764,7 @@ namespace ZohoApiTool.Task
                     da.UpdateCommand.Parameters.Add("@balance", SqlDbType.Decimal, 4, "balance");
                     da.UpdateCommand.Parameters.Add("@delivery_method", SqlDbType.NVarChar, 100, "delivery_method");
                     da.UpdateCommand.Parameters.Add("@IsDel", SqlDbType.Int, 8, "IsDel");
-                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.DateTime, 10, "LastChangeDt");
+                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.NVarChar, 100, "LastChangeDt");
                     break;
                 case "T_BOOKS_SALDTL_Check":
                     da.UpdateCommand.Parameters.Add("@salesorder_id", SqlDbType.NVarChar, 200, "salesorder_id");
@@ -754,7 +781,7 @@ namespace ZohoApiTool.Task
                     da.UpdateCommand.Parameters.Add("@quantity", SqlDbType.Int, 8, "quantity");
                     da.UpdateCommand.Parameters.Add("@unit", SqlDbType.NVarChar, 10, "unit");
                     da.UpdateCommand.Parameters.Add("@discount_amount", SqlDbType.Decimal, 2, "discount_amount");
-                    da.UpdateCommand.Parameters.Add("@discount", SqlDbType.Decimal, 2, "discount");
+                    da.UpdateCommand.Parameters.Add("@discount", SqlDbType.NVarChar, 100, "discount");
                     da.UpdateCommand.Parameters.Add("@tax_type", SqlDbType.NVarChar, 100, "tax_type");
                     da.UpdateCommand.Parameters.Add("@tax_exemption_code", SqlDbType.NVarChar, 200, "tax_exemption_code");
                     da.UpdateCommand.Parameters.Add("@item_total", SqlDbType.Decimal, 2, "item_total");
@@ -766,7 +793,7 @@ namespace ZohoApiTool.Task
                     da.UpdateCommand.Parameters.Add("@quantity_packed", SqlDbType.Int, 8, "quantity_packed");
                     da.UpdateCommand.Parameters.Add("@quantity_shipped", SqlDbType.Int, 8, "quantity_shipped");
                     da.UpdateCommand.Parameters.Add("@IsDel", SqlDbType.Int, 8, "IsDel");
-                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.DateTime, 10, "LastChangeDt");
+                    da.UpdateCommand.Parameters.Add("@LastChangeDt", SqlDbType.NVarChar, 100, "LastChangeDt");
                     break;
             }
             return da;

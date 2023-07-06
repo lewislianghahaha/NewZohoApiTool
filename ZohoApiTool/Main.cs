@@ -116,7 +116,7 @@ namespace ZohoApiTool
         /// </summary>
         private void GenerateRecord()
         {
-            DateTime now = DateTime.Now;
+            var now = DateTime.Now;
 
             if (DateTime.Compare(Convert.ToDateTime(now.ToString("HH:mm")), Convert.ToDateTime(_genTime)) > 0)
             {
@@ -137,11 +137,13 @@ namespace ZohoApiTool
                 //todo:根据返回值确定是否成功
                 if (!task.ResultMark)
                 {
-                    txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 出现异常,请查看日志信息");
+                    var now1 = DateTime.Now;
+                    txtmessage.AppendText($"\r\n" + now1.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 出现异常,请查看日志信息");
                 }
                 else
                 {
-                    txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 执行结束");
+                    var now2 = DateTime.Now;
+                    txtmessage.AppendText($"\r\n" + now2.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 执行结束");
                 }
                 //设置添加文本后自动滚动显示到最后一行
                 txtmessage.ScrollToCaret();

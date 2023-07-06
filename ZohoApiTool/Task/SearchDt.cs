@@ -25,8 +25,9 @@ namespace ZohoApiTool.Task
                 var sqlDataAdapter = new SqlDataAdapter(sqlscript, conDb.GetConnection());
                 sqlDataAdapter.Fill(resultdt);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                LogHelper.WriteErrorLog("获取连同现异常,原因:",ex);
                 resultdt.Rows.Clear();
                 resultdt.Columns.Clear();
             }

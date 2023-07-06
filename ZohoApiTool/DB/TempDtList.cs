@@ -36,7 +36,7 @@ namespace ZohoApiTool.DB
                     //交货日期
                     case 3:
                         dc.ColumnName = "delivery_date";
-                        dc.DataType = Type.GetType("System.DateTime"); 
+                        dc.DataType = Type.GetType("System.String"); 
                         break;
                     //公司名称
                     case 4:
@@ -56,27 +56,27 @@ namespace ZohoApiTool.DB
                     //单据日期
                     case 7:
                         dc.ColumnName = "Orderdate";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //船务日期
                     case 8:
                         dc.ColumnName = "shipment_date";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //船务天数
                     case 9:
                         dc.ColumnName = "shipment_days";
-                        dc.DataType = Type.GetType("System.Int32"); 
+                        dc.DataType = Type.GetType("System.String"); 
                         break;
                     //按天计算
                     case 10:
                         dc.ColumnName = "due_by_days";
-                        dc.DataType = Type.GetType("System.Int32");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //截止日期:天
                     case 11:
                         dc.ColumnName = "due_in_days";
-                        dc.DataType = Type.GetType("System.Int32");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //货币
                     case 12:
@@ -101,12 +101,12 @@ namespace ZohoApiTool.DB
                     //创建日期
                     case 16:
                         dc.ColumnName = "created_time";
-                        dc.DataType = Type.GetType("System.DateTime"); 
+                        dc.DataType = Type.GetType("System.String"); 
                         break;
                     //最后一次修改日期
                     case 17:
                         dc.ColumnName = "last_modified_time";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //是否有EMAIL
                     case 18:
@@ -176,12 +176,12 @@ namespace ZohoApiTool.DB
                     //单据插入日期(PS:一经插入,不能修改)
                     case 31:
                         dc.ColumnName = "OrderCreateDt";
-                        dc.DataType = Type.GetType("System.DateTime"); 
+                        dc.DataType = Type.GetType("System.String"); 
                         break;
                     //最后一次操作日期(PS:记录最后一次更新日期,更新时使用;每次Up可覆盖更新)
                     case 32:
                         dc.ColumnName = "LastChangeDt";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //国家类别(暂分为:US,MX)=>用于区分ZOHO不同国家类别
                     case 33:
@@ -219,7 +219,7 @@ namespace ZohoApiTool.DB
                     //单据日期
                     case 2:
                         dc.ColumnName = "Orderdate";
-                        dc.DataType = Type.GetType("System.DateTime"); 
+                        dc.DataType = Type.GetType("System.String"); 
                         break;
                     //物料ID
                     case 3:
@@ -279,7 +279,7 @@ namespace ZohoApiTool.DB
                     //折扣
                     case 14:
                         dc.ColumnName = "discount";
-                        dc.DataType = Type.GetType("System.Decimal");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //税类型
                     case 15:
@@ -339,12 +339,12 @@ namespace ZohoApiTool.DB
                     //单据插入日期(PS:一经插入,不能修改)
                     case 26:
                         dc.ColumnName = "OrderCreateDt";
-                        dc.DataType = Type.GetType("System.DateTime"); 
+                        dc.DataType = Type.GetType("System.String"); 
                         break;
                     // 最后一次操作日期(PS:记录最后一次更新日期,更新时使用;Up可覆盖更新)
                     case 27:
                         dc.ColumnName = "LastChangeDt";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                 }
                 dt.Columns.Add(dc);
@@ -382,7 +382,7 @@ namespace ZohoApiTool.DB
                     //交货日期
                     case 3:
                         dc.ColumnName = "delivery_date";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //公司名称
                     case 4:
@@ -402,27 +402,27 @@ namespace ZohoApiTool.DB
                     //单据日期
                     case 7:
                         dc.ColumnName = "Orderdate";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //船务日期
                     case 8:
                         dc.ColumnName = "shipment_date";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //船务天数
                     case 9:
                         dc.ColumnName = "shipment_days";
-                        dc.DataType = Type.GetType("System.Int32");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //按天计算
                     case 10:
                         dc.ColumnName = "due_by_days";
-                        dc.DataType = Type.GetType("System.Int32");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //截止日期:天
                     case 11:
                         dc.ColumnName = "due_in_days";
-                        dc.DataType = Type.GetType("System.Int32");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //货币
                     case 12:
@@ -447,12 +447,12 @@ namespace ZohoApiTool.DB
                     //创建日期
                     case 16:
                         dc.ColumnName = "created_time";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //最后一次修改日期
                     case 17:
                         dc.ColumnName = "last_modified_time";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //是否有EMAIL
                     case 18:
@@ -545,7 +545,7 @@ namespace ZohoApiTool.DB
                     //单据日期
                     case 2:
                         dc.ColumnName = "Orderdate";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //物料ID
                     case 3:
@@ -605,7 +605,7 @@ namespace ZohoApiTool.DB
                     //折扣
                     case 14:
                         dc.ColumnName = "discount";
-                        dc.DataType = Type.GetType("System.Decimal");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //税类型
                     case 15:
@@ -698,12 +698,12 @@ namespace ZohoApiTool.DB
                     //单据日期
                     case 4:
                         dc.ColumnName = "Orderdate";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //船务日期
                     case 5:
                         dc.ColumnName = "shipment_date";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //货币
                     case 6:
@@ -723,7 +723,7 @@ namespace ZohoApiTool.DB
                     //最后一次修改日期
                     case 9:
                         dc.ColumnName = "last_modified_time";
-                        dc.DataType = Type.GetType("System.DateTime");
+                        dc.DataType = Type.GetType("System.String");
                         break;
 
                     //总数量
@@ -843,7 +843,7 @@ namespace ZohoApiTool.DB
                     //折扣
                     case 32:
                         dc.ColumnName = "discount";
-                        dc.DataType = Type.GetType("System.Decimal");
+                        dc.DataType = Type.GetType("System.String");
                         break;
                     //税类型
                     case 33:

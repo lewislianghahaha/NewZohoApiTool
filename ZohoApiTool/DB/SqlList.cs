@@ -26,7 +26,7 @@ namespace ZohoApiTool.DB
         /// <returns></returns>
         public string GetSearchBooksSalHead()
         {
-            _result = @"SELECT TOP 9900 A.salesorder_id
+            _result = @"SELECT TOP 1000 A.salesorder_id
                         FROM T_BOOKS_SAL A
                         WHERE A.IsDel = 1
                         AND A.CountryType = 'US'
@@ -45,7 +45,7 @@ namespace ZohoApiTool.DB
             _result = @"SELECT X.salesorder_id,A.line_item_id
                         FROM T_BOOKS_SALDTL A
                         INNER JOIN (
-                                        SELECT TOP 9900 A.salesorder_id
+                                        SELECT TOP 1000 A.salesorder_id
 						                FROM T_BOOKS_SAL A
 						                WHERE A.IsDel=1
 						                AND A.CountryType='US'

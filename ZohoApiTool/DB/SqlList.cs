@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace ZohoApiTool.DB
+﻿namespace ZohoApiTool.DB
 {
     //SQL语句集合
     public class SqlList
@@ -22,6 +20,7 @@ namespace ZohoApiTool.DB
         /// 初始化获取T_BOOKS_SAL表记录(注:只获取上月1号至当天 且 IsDel=1的记录)
         /// 作用:1.与API返回结果进行比较,判断API返回数据是否新记录
         ///      2.放到表体API进行查找,用于判断此单据是否已删除
+        ///      3.注:日期范围-两个月
         /// </summary>
         /// <returns></returns>
         public string GetSearchBooksSalHead()
@@ -31,7 +30,8 @@ namespace ZohoApiTool.DB
                         WHERE A.IsDel = 1
                         AND A.CountryType = 'US'
                         AND CONVERT(VARCHAR(10), A.OrderCreateDt, 23)>= CONVERT(VARCHAR(10), DATEADD(dd, -day(dateadd(month, -1, getdate())) + 1, dateadd(month, -1, getdate())), 23)
-                        AND CONVERT(VARCHAR(10), A.OrderCreateDt, 23)<= CONVERT(VARCHAR(10), GETDATE(), 23)";
+                        AND CONVERT(VARCHAR(10), A.OrderCreateDt, 23)<= CONVERT(VARCHAR(10), GETDATE(), 23)
+                        ORDER BY A.OrderCreateDt";
             return _result;
         }
 
@@ -51,7 +51,8 @@ namespace ZohoApiTool.DB
 						                AND A.CountryType='US'
 						                AND CONVERT(VARCHAR(10),A.OrderCreateDt,23)>=CONVERT(VARCHAR(10),DATEADD(dd,-day(dateadd(month,-1,getdate()))+1,dateadd(month,-1,getdate())),23) 
 						                AND CONVERT(VARCHAR(10),A.OrderCreateDt,23)<=CONVERT(VARCHAR(10),GETDATE(),23)
-                                    )X ON A.salesorder_id=X.salesorder_id";
+                                    )X ON A.salesorder_id=X.salesorder_id
+                        ORDER BY A.OrderCreateDt";
             return _result;
         }
 
@@ -141,17 +142,18 @@ namespace ZohoApiTool.DB
         /// </summary>
         /// <param name="typeid">0:对表头进行更新操作 1:对表体进行更新操作</param>
         /// <param name="uplist">更新主键值;表头=>salesorder_id 表体=>line_item_id</param>
+        /// <param name="lastchangedt">最后一次执行时间</param>
         /// <returns></returns>
-        public string UpIsDelRecord(int typeid,string uplist)
+        public string UpIsDelRecord(int typeid,string uplist,string lastchangedt)
         {
             //对表头进行更新操作
             if (typeid == 0)
             {
-                //TODO:1.对表头IsDel字段更新 2.根据salesorder_id对应的表体IsDel字段更新
-                _result = $@"UPDATE dbo.T_BOOKS_SAL SET IsDel=0
+                //1.对表头IsDel字段更新 2.根据salesorder_id对应的表体IsDel字段更新
+                _result = $@"UPDATE dbo.T_BOOKS_SAL SET IsDel=0,LastChangeDt='{lastchangedt}'
                              WHERE salesorder_id IN ({uplist})
                             
-                            UPDATE A SET ISDEL=0
+                            UPDATE A SET ISDEL=0,LastChangeDt='{lastchangedt}'
                             FROM dbo.T_BOOKS_SALDTL A
                             WHERE A.salesorder_id IN  ({uplist})                           
                             ";
@@ -159,7 +161,7 @@ namespace ZohoApiTool.DB
             //对表体进行更新操作
             else
             {
-                _result = $@"UPDATE dbo.T_BOOKS_SALDTL SET IsDel=0
+                _result = $@"UPDATE dbo.T_BOOKS_SALDTL SET IsDel=0,LastChangeDt='{lastchangedt}'
                              WHERE line_item_id IN ({uplist})";
             }
 

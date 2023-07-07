@@ -209,7 +209,7 @@ namespace ZohoApiTool.Task
                         newrow[29] = Convert.ToString(ordJToken["delivery_method"]);        //交货方式
                         _headDt.Rows.Add(newrow);
                     }
-                    var a = _headDt.Copy();
+                    //var a = _headDt.Copy();
                 }
                 else if (typeid == 2)
                 {
@@ -250,7 +250,7 @@ namespace ZohoApiTool.Task
                         newrow[24] = Convert.ToInt32(ordJToken["quantity_shipped"]);    //Status-Shipped
                         _dtldt.Rows.Add(newrow);
                     }
-                    var b = _dtldt.Copy();
+                    //var b = _dtldt.Copy();
                 }
                 //‘盘点功能’使用-包含表头 表体信息 
                 //todo:(重) 分别将明细行的 quantity quantity_invoiced quantity_packed quantity_shipped 累加至表头对应的项内
@@ -272,7 +272,7 @@ namespace ZohoApiTool.Task
                     var currencyCode = Convert.ToString(obj["salesorder"]["currency_code"]);            //货币
                     var total = Convert.ToDecimal(obj["salesorder"]["total"]);                          //Sub Total
                     var bcyTotal = Convert.ToDecimal(obj["salesorder"]["bcy_total"]);                   //Total
-                    var lastModifiedTime = Convert.ToDecimal(obj["salesorder"]["last_modified_time"]);  //最后一次修改日期
+                    var lastModifiedTime = Convert.ToString(obj["salesorder"]["last_modified_time"]);   //最后一次修改日期
                     var orderStatus = Convert.ToString(obj["salesorder"]["order_status"]);              //单据状态
                     var invoicedStatus = Convert.ToString(obj["salesorder"]["invoiced_status"]);        //Invoice状态
                     var paidStatus = Convert.ToString(obj["salesorder"]["paid_status"]);                //Payment状态
@@ -329,7 +329,7 @@ namespace ZohoApiTool.Task
                         newrow[29] = Convert.ToInt32(ordJToken["quantity"]);              //数量
                         newrow[30] = Convert.ToString(ordJToken["unit"]);                 //单位
                         newrow[31] = Convert.ToDecimal(ordJToken["discount_amount"]);     //折扣金额
-                        newrow[32] = Convert.ToDecimal(ordJToken["discount"]);            //折扣
+                        newrow[32] = Convert.ToString(ordJToken["discount"]);             //折扣
                         newrow[33] = Convert.ToString(ordJToken["tax_type"]);             //税类型
                         newrow[34] = Convert.ToString(ordJToken["tax_exemption_code"]);   //免税代码
                         newrow[35] = Convert.ToDecimal(ordJToken["item_total"]);          //总金额
@@ -342,7 +342,7 @@ namespace ZohoApiTool.Task
                         newrow[42] = Convert.ToInt32(ordJToken["quantity_shipped"]);      //Status-Shipped
                         _dtldt.Rows.Add(newrow);
                     }
-                    var c = _dtldt.Copy();
+                    //var c = _dtldt.Copy();
                 }
             }
             catch (Exception ex)

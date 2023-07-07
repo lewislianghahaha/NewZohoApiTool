@@ -102,12 +102,12 @@ namespace ZohoApiTool
         {
             try
             {
-                var deg=new SetCallBack(GenerateRecord);
+                var deg = new SetCallBack(GenerateRecord);
                 this.Invoke(deg, new object[] {});
             }
             catch (Exception ex)
             {
-                LogHelper.WriteErrorLog("出现异常:", ex);
+                LogHelper.WriteErrorLog("Elapsed出现异常:", ex);
             }
         }
 
@@ -128,13 +128,17 @@ namespace ZohoApiTool
             }
             else if (now.ToString("HH:mm") == _genTime && _logipd == 0)
             {
+                tmclick.Enabled = false;
                 pbar.Visible = true;
                 //将内容插入至多行文本(与+=一样作用) 换行\r\n （或System.Environment.NewLine）
                 txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间已到,开始执行任务");
 
-                //todo:执行核心运算
-                task.GenerateRecord();
-                //todo:根据返回值确定是否成功
+                //执行核心运算
+                //task.GenerateRecord();
+
+
+
+                //根据返回值确定是否成功
                 if (!task.ResultMark)
                 {
                     var now1 = DateTime.Now;
@@ -148,7 +152,9 @@ namespace ZohoApiTool
                 //设置添加文本后自动滚动显示到最后一行
                 txtmessage.ScrollToCaret();
                 //作用:用于设定同一天只能在设定的时间内执行一次
-                _logipd = 1;  
+                _logipd = 1;
+                //当运算成功后,点击按钮才可以继续执行
+                tmclick.Enabled = true;
             }
             else
             {

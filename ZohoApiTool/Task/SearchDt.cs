@@ -52,9 +52,10 @@ namespace ZohoApiTool.Task
                     sql.Close();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 result = false;
+                LogHelper.WriteErrorLog("执行更新出现异常,原因:", ex);
             }
             return result;
         }
@@ -94,10 +95,11 @@ namespace ZohoApiTool.Task
         /// </summary>
         /// <param name="typeid"></param>
         /// <param name="uplist"></param>
+        /// <param name="lastchangedt"></param>
         /// <returns></returns>
-        public bool UpIsDelRecord(int typeid, string uplist)
+        public bool UpIsDelRecord(int typeid, string uplist,string lastchangedt)
         {
-            var sqlscript = sqlList.UpIsDelRecord(typeid, uplist);
+            var sqlscript = sqlList.UpIsDelRecord(typeid, uplist, lastchangedt);
             return Generdt(sqlscript);
         }
 

@@ -45,8 +45,6 @@ namespace ZohoApiTool
             OnShowSecondList();
         }
 
-
-
         /// <summary>
         /// 开始执行
         /// </summary>
@@ -85,13 +83,13 @@ namespace ZohoApiTool
                     searchDevice.Start();
 
                     //txtmessage.AppendText($"设定时间:{_genTime}已到,开始执行=>");
-                    //LogHelper.WriteLog($"设定时间:{_genTime}已到,开始执行=>");
+                    LogHelper.WriteLog($"设定时间:{_genTime}已到,开始执行=>");
                 }
                 //关闭执行
                 else
                 {
                     tmclick.Text = $"开始执行";
-                    txtmessage.AppendText($"\r\n" + $"定时执行停止,暂不执行任务");
+                    txtmessage.AppendText($"定时执行停止,暂不执行任务" + Environment.NewLine);
                     //设置添加文本后自动滚动显示到最后一行
                     txtmessage.ScrollToCaret();
                     _myTimer.Stop();
@@ -123,6 +121,8 @@ namespace ZohoApiTool
             {
                 //todo:通过Interlocked.Exchange()设置防止多线程重入(重); 达到效果:每次只允许一个线程进入以下逻辑运算
                 //todo:--做法:判断标记inTimer是否为0,若为0即修改为1并进行逻辑代码,在逻辑代码执行完成后,将inTimer设置为0 (重)
+
+
                 if (Interlocked.Exchange(ref _inTimer, 1) == 0)
                 {
                     if (DateTime.Compare(Convert.ToDateTime(DateTime.Now.ToString("HH:mm")), Convert.ToDateTime(_genTime)) > 0)
@@ -132,10 +132,11 @@ namespace ZohoApiTool
                     }
                     else if (DateTime.Now.ToString("HH:mm") == _genTime && _logipd == 0)
                     {
+                        //todo:显示开始提示
                         ShowStartToContol();
                         //TODO:执行逻辑处理程序(重)
-                        var result = GenerateRecord();
-                        //todo:调用委托函数-输出至控件-(提示结束?)
+                         var result = GenerateRecord();
+                        //todo:调用委托函数-输出至控件-(提示结束)
                         ShowRdToControl(result);
                         _logipd = 1;
                     }
@@ -161,6 +162,8 @@ namespace ZohoApiTool
                 {
                     //将内容插入至多行文本(与+=一样作用) 换行\r\n （或System.Environment.NewLine）
                     txtmessage.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间已到,开始执行任务"+ Environment.NewLine);
+                    //设置添加文本后自动滚动显示到最后一行
+                    txtmessage.ScrollToCaret();
                     tmclick.Enabled = false;
                     pbar.Visible = true;
                     _showid = 1;
@@ -176,7 +179,7 @@ namespace ZohoApiTool
         {
             if (this.InvokeRequired)
             {
-                ShowResultToContol showResultToContol=new ShowResultToContol(ShowRdToControl);
+                var showResultToContol = new ShowResultToContol(ShowRdToControl);
                 this.Invoke(showResultToContol,new object[] {value});
             }
             else

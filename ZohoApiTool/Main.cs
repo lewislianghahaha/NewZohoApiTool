@@ -105,7 +105,7 @@ namespace ZohoApiTool
         }
 
         /// <summary>
-        /// 子线程函数
+        /// 子线程函数(重)
         /// </summary>
         private void Timer()
         {
@@ -134,10 +134,11 @@ namespace ZohoApiTool
                     {
                         //todo:显示开始提示
                         ShowStartToContol();
-                        //TODO:执行逻辑处理程序(重)
+                        //todo:执行逻辑处理程序(重)
                          var result = GenerateRecord();
                         //todo:调用委托函数-输出至控件-(提示结束)
                         ShowRdToControl(result);
+                        //作用:用于设定同一天只能在设定的时间内执行一次
                         _logipd = 1;
                     }
                     Interlocked.Exchange(ref _inTimer, 0);
@@ -166,6 +167,7 @@ namespace ZohoApiTool
                     txtmessage.ScrollToCaret();
                     tmclick.Enabled = false;
                     pbar.Visible = true;
+                    //作用:判断同一天内只执行一次
                     _showid = 1;
                 }
             }
@@ -199,25 +201,6 @@ namespace ZohoApiTool
             }
         }
 
-
-        /// <summary>
-        /// 定时达到后执行(调用委托)
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        //private void _myTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        //{
-        //    try
-        //    {
-        //        var deg = new SetCallBack(GenerateRecord);
-        //        this.Invoke(deg, new object[] { });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        LogHelper.WriteErrorLog("Elapsed出现异常:", ex);
-        //    }
-        //}
-
         /// <summary>
         /// 核心运算入口(重)
         /// </summary>
@@ -239,49 +222,6 @@ namespace ZohoApiTool
             }
 
             return result;
-
-            //var now = DateTime.Now;
-
-            //if (DateTime.Compare(Convert.ToDateTime(now.ToString("HH:mm")), Convert.ToDateTime(_genTime)) > 0)
-            //{
-            //    pbar.Visible = false;
-            //    _logipd = 0;
-            //    //txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间超过，不执行任务");
-            //    ////设置添加文本后自动滚动显示到最后一行
-            //    //txtmessage.ScrollToCaret();
-            //}
-            //else if (now.ToString("HH:mm") == _genTime && _logipd == 0)
-            //{
-
-
-
-
-            //    //根据返回值确定是否成功
-            //    if (!task.ResultMark)
-            //    {
-            //        var now1 = DateTime.Now;
-            //        txtmessage.AppendText($"\r\n" + now1.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 出现异常,请查看日志信息");
-            //    }
-            //    else
-            //    {
-            //        var now2 = DateTime.Now;
-            //        txtmessage.AppendText($"\r\n" + now2.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 执行结束");
-            //    }
-            //    //设置添加文本后自动滚动显示到最后一行
-            //    txtmessage.ScrollToCaret();
-            //    //作用:用于设定同一天只能在设定的时间内执行一次
-            //    _logipd = 1;
-            //    //当运算成功后,点击按钮才可以继续执行
-            //    tmclick.Enabled = true;
-            //}
-            //else
-            //{
-            //    pbar.Visible = false;
-            //    //txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 暂不执行任务");
-            //    ////LogHelper.WriteLog(now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "时间已到，执行任务");
-            //    ////设置添加文本后自动滚动显示到最后一行
-            //    //txtmessage.ScrollToCaret();
-            //}
         }
 
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Threading;
 using System.Windows.Forms;
 using ZohoApiTool.Task;
 
@@ -7,16 +8,26 @@ namespace ZohoApiTool
 {
     public partial class Main : Form
     {
-        TaskLogic task=new TaskLogic();
+        TaskLogic task = new TaskLogic();
 
         private System.Timers.Timer _myTimer = new System.Timers.Timer();
+
         //作用:用于设定同一天只能在设定的时间内执行一次
         private int _logipd = 0;
         //收集前端选择的时间参数
         private string _genTime = "";
 
-        //定义委托(调用子线程使用)
-        delegate void SetCallBack();
+        //作用:用于控件同一个天内‘开始显示’描述只执行一次(0:是 1：否)
+        private int _showid = 0;
+        //作用:当前线程标记;Elapsed事件内的方法使用 (0:可执行 1:否)
+        private static int _inTimer = 0;
+
+        //定义委托(更新UI线程控件-开始显示使用)
+        private delegate void ShowStart();
+
+        //定义委托(更新UI线程控件-结束显示使用)
+        private delegate void ShowResultToContol(bool value);
+
 
         public Main()
         {
@@ -33,6 +44,8 @@ namespace ZohoApiTool
             OnShowHourList();
             OnShowSecondList();
         }
+
+
 
         /// <summary>
         /// 开始执行
@@ -66,13 +79,13 @@ namespace ZohoApiTool
                     //设置显示信息
                     lbmessage.Text = $"在每天{_genTime}执行,将从'{DateTime.Now.ToString("yyyy-MM-dd")}'开始执行计划";
 
-                    //对_myTimer对象进行相关设置
-                    _myTimer.Interval = 1000;
-                    _myTimer.Elapsed += _myTimer_Elapsed;
-                    _myTimer.AutoReset = true;
-                    _myTimer.Enabled = true;
-                    txtmessage.AppendText($"开始执行=>");
-                    LogHelper.WriteLog("开始执行=>");
+                    //todo:新增子线程并执行
+                    var searchDevice = new Thread(new ThreadStart(Timer));
+                    searchDevice.IsBackground = true;
+                    searchDevice.Start();
+
+                    //txtmessage.AppendText($"设定时间:{_genTime}已到,开始执行=>");
+                    //LogHelper.WriteLog($"设定时间:{_genTime}已到,开始执行=>");
                 }
                 //关闭执行
                 else
@@ -94,76 +107,175 @@ namespace ZohoApiTool
         }
 
         /// <summary>
-        /// 定时达到后执行(调用委托)
+        /// 子线程函数
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void _myTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void Timer()
         {
-            try
+            //对_myTimer对象进行相关设置
+            _myTimer.Interval = 1000;
+            _myTimer.AutoReset = true;
+            _myTimer.Enabled = true;
+
+            _myTimer.Elapsed += (a1, a2) =>
             {
-                var deg = new SetCallBack(GenerateRecord);
-                this.Invoke(deg, new object[] {});
+                //todo:通过Interlocked.Exchange()设置防止多线程重入(重); 达到效果:每次只允许一个线程进入以下逻辑运算
+                //todo:--做法:判断标记inTimer是否为0,若为0即修改为1并进行逻辑代码,在逻辑代码执行完成后,将inTimer设置为0 (重)
+                if (Interlocked.Exchange(ref _inTimer, 1) == 0)
+                {
+                    if (DateTime.Compare(Convert.ToDateTime(DateTime.Now.ToString("HH:mm")), Convert.ToDateTime(_genTime)) > 0)
+                    {
+                        _logipd = 0;
+                        _showid = 0;
+                    }
+                    else if (DateTime.Now.ToString("HH:mm") == _genTime && _logipd == 0)
+                    {
+                        ShowStartToContol();
+                        //TODO:执行逻辑处理程序(重)
+                        var result = GenerateRecord();
+                        //todo:调用委托函数-输出至控件-(提示结束?)
+                        ShowRdToControl(result);
+                        _logipd = 1;
+                    }
+                    Interlocked.Exchange(ref _inTimer, 0);
+                }
+            };
+        }
+
+        /// <summary>
+        /// 定义委托方法-当时间达到开始执行时,更改控件显示值使用
+        /// </summary>
+        private void ShowStartToContol()
+        {
+            if (this.InvokeRequired)
+            {
+                var showStart = new ShowStart(ShowStartToContol);
+                this.Invoke(showStart, new object[] { });
+                //this.Invoke(new GetNum(GenerateRecord));
             }
-            catch (Exception ex)
+            else
             {
-                LogHelper.WriteErrorLog("Elapsed出现异常:", ex);
+                if (_showid == 0)
+                {
+                    //将内容插入至多行文本(与+=一样作用) 换行\r\n （或System.Environment.NewLine）
+                    txtmessage.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间已到,开始执行任务"+ Environment.NewLine);
+                    tmclick.Enabled = false;
+                    pbar.Visible = true;
+                    _showid = 1;
+                }
             }
         }
 
         /// <summary>
-        /// 核心运算入口
+        ///  定义委托方法-当有返回值时,更改控件显示值使用
         /// </summary>
-        private void GenerateRecord()
+        /// <param name="value"></param>
+        private void ShowRdToControl(bool value)
         {
-            var now = DateTime.Now;
-
-            if (DateTime.Compare(Convert.ToDateTime(now.ToString("HH:mm")), Convert.ToDateTime(_genTime)) > 0)
+            if (this.InvokeRequired)
             {
-                pbar.Visible = false;
-                _logipd = 0;
-                //txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间超过，不执行任务");
-                ////设置添加文本后自动滚动显示到最后一行
-                //txtmessage.ScrollToCaret();
-            }
-            else if (now.ToString("HH:mm") == _genTime && _logipd == 0)
-            {
-                tmclick.Enabled = false;
-                pbar.Visible = true;
-                //将内容插入至多行文本(与+=一样作用) 换行\r\n （或System.Environment.NewLine）
-                txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间已到,开始执行任务");
-
-                //执行核心运算
-                //task.GenerateRecord();
-
-
-
-                //根据返回值确定是否成功
-                if (!task.ResultMark)
-                {
-                    var now1 = DateTime.Now;
-                    txtmessage.AppendText($"\r\n" + now1.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 出现异常,请查看日志信息");
-                }
-                else
-                {
-                    var now2 = DateTime.Now;
-                    txtmessage.AppendText($"\r\n" + now2.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 执行结束");
-                }
-                //设置添加文本后自动滚动显示到最后一行
-                txtmessage.ScrollToCaret();
-                //作用:用于设定同一天只能在设定的时间内执行一次
-                _logipd = 1;
-                //当运算成功后,点击按钮才可以继续执行
-                tmclick.Enabled = true;
+                ShowResultToContol showResultToContol=new ShowResultToContol(ShowRdToControl);
+                this.Invoke(showResultToContol,new object[] {value});
             }
             else
             {
+                if (!value)
+                {
+                    txtmessage.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 出现异常,请查看日志信息" + Environment.NewLine);
+                }
+                else
+                {
+                    txtmessage.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 执行结束" + Environment.NewLine);
+                }
+                //设置添加文本后自动滚动显示到最后一行
+                txtmessage.ScrollToCaret();
                 pbar.Visible = false;
-                //txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 暂不执行任务");
-                ////LogHelper.WriteLog(now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "时间已到，执行任务");
-                ////设置添加文本后自动滚动显示到最后一行
-                //txtmessage.ScrollToCaret();
+                tmclick.Enabled = true;
             }
+        }
+
+
+        /// <summary>
+        /// 定时达到后执行(调用委托)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        //private void _myTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        //{
+        //    try
+        //    {
+        //        var deg = new SetCallBack(GenerateRecord);
+        //        this.Invoke(deg, new object[] { });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        LogHelper.WriteErrorLog("Elapsed出现异常:", ex);
+        //    }
+        //}
+
+        /// <summary>
+        /// 核心运算入口(重)
+        /// </summary>
+        private bool GenerateRecord()
+        {
+            var result = true;
+
+            try
+            {
+                //执行核心运算
+                task.GenerateRecord();
+                //根据返回值确定是否成功
+                result = task.ResultMark;
+            }
+            catch (Exception ex)
+            {
+                result = false;
+                LogHelper.WriteErrorLog("返回结果出现异常,原因:",ex);
+            }
+
+            return result;
+
+            //var now = DateTime.Now;
+
+            //if (DateTime.Compare(Convert.ToDateTime(now.ToString("HH:mm")), Convert.ToDateTime(_genTime)) > 0)
+            //{
+            //    pbar.Visible = false;
+            //    _logipd = 0;
+            //    //txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间超过，不执行任务");
+            //    ////设置添加文本后自动滚动显示到最后一行
+            //    //txtmessage.ScrollToCaret();
+            //}
+            //else if (now.ToString("HH:mm") == _genTime && _logipd == 0)
+            //{
+
+
+
+
+            //    //根据返回值确定是否成功
+            //    if (!task.ResultMark)
+            //    {
+            //        var now1 = DateTime.Now;
+            //        txtmessage.AppendText($"\r\n" + now1.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 出现异常,请查看日志信息");
+            //    }
+            //    else
+            //    {
+            //        var now2 = DateTime.Now;
+            //        txtmessage.AppendText($"\r\n" + now2.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 执行结束");
+            //    }
+            //    //设置添加文本后自动滚动显示到最后一行
+            //    txtmessage.ScrollToCaret();
+            //    //作用:用于设定同一天只能在设定的时间内执行一次
+            //    _logipd = 1;
+            //    //当运算成功后,点击按钮才可以继续执行
+            //    tmclick.Enabled = true;
+            //}
+            //else
+            //{
+            //    pbar.Visible = false;
+            //    //txtmessage.AppendText($"\r\n" + now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 暂不执行任务");
+            //    ////LogHelper.WriteLog(now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "时间已到，执行任务");
+            //    ////设置添加文本后自动滚动显示到最后一行
+            //    //txtmessage.ScrollToCaret();
+            //}
         }
 
 

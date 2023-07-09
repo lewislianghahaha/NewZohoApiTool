@@ -116,6 +116,9 @@ namespace ZohoApiTool
             _myTimer.AutoReset = true;
             _myTimer.Enabled = true;
 
+            //todo:主分三部份==>1.Elapsed 创建子线线程,用于根据不同条件进行相关操作
+            //todo:2.ShowStartToContol() 及 ShowRdToControl() 为委托方法,主要用于通知委托更新指定UI线程内控件的值
+            //todo:3.GenerateRecord() 核心运算方法;主体执行在此,并最后将返回值传输至ShowRdToControl() 委托方法进行更改控件显示
             _myTimer.Elapsed += (a1, a2) =>
             {
                 //todo:通过Interlocked.Exchange()设置防止多线程重入(重); 达到效果:每次只允许一个线程进入以下逻辑运算

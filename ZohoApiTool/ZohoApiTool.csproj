@@ -33,6 +33,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Logo.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net, Version=2.0.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.15\lib\net45\log4net.dll</HintPath>
@@ -189,6 +192,7 @@
     <Content Include="bin\Debug\ZohoApiTool.exe" />
     <Content Include="bin\Debug\ZohoApiTool.pdb" />
     <Content Include="bin\Debug\ZohoApiTool.vshost.exe" />
+    <Content Include="Logo.ico" />
     <Content Include="obj\Debug\TempPE\Properties.Resources.Designer.cs.dll" />
     <Content Include="obj\Debug\ZohoApiTool.csproj.FileListAbsolute.txt" />
     <Content Include="obj\Debug\ZohoApiTool.exe" />

@@ -122,7 +122,9 @@ namespace ZohoApiTool
                 //todo:通过Interlocked.Exchange()设置防止多线程重入(重); 达到效果:每次只允许一个线程进入以下逻辑运算
                 //todo:--做法:判断标记inTimer是否为0,若为0即修改为1并进行逻辑代码,在逻辑代码执行完成后,将inTimer设置为0 (重)
 
-
+                //todo:运算逻辑
+                //todo:如果当前有线程正在处理定时器事件，则标志位inTimer == 1,其他线程无法进入；
+                //todo:如果没有线程正在处理，则标志位inTimer == 0,该线程可以进入，并将标志位置为 1，处理完成后，再将标志位置为 0.
                 if (Interlocked.Exchange(ref _inTimer, 1) == 0)
                 {
                     if (DateTime.Compare(Convert.ToDateTime(DateTime.Now.ToString("HH:mm")), Convert.ToDateTime(_genTime)) > 0)

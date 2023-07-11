@@ -82,7 +82,6 @@ namespace ZohoApiTool
                     searchDevice.IsBackground = true;
                     searchDevice.Start();
 
-                    //txtmessage.AppendText($"设定时间:{_genTime}已到,开始执行=>");
                     LogHelper.WriteLog($"设定时间:{_genTime}已到,开始执行=>");
                 }
                 //关闭执行

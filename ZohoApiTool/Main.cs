@@ -110,7 +110,7 @@ namespace ZohoApiTool
         private void Timer()
         {
             //对_myTimer对象进行相关设置
-            _myTimer.Interval = 1000;
+            _myTimer.Interval = 10000; //设置时间间隔10秒 (1秒=1000毫秒)
             _myTimer.AutoReset = true;
             _myTimer.Enabled = true;
 
@@ -145,6 +145,9 @@ namespace ZohoApiTool
                     }
                     Interlocked.Exchange(ref _inTimer, 0);
                 }
+                //todo:清理内存
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
             };
         }
 

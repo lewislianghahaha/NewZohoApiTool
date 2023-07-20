@@ -77,7 +77,7 @@ namespace ZohoApiTool
                     //设置显示信息
                     lbmessage.Text = $"在每天{_genTime}执行,将从'{DateTime.Now.ToString("yyyy-MM-dd")}'开始执行计划";
 
-                    //todo:新增子线程并执行
+                    //新增子线程并执行
                     var searchDevice = new Thread(new ThreadStart(Timer));
                     searchDevice.IsBackground = true;
                     searchDevice.Start();
@@ -89,6 +89,8 @@ namespace ZohoApiTool
                 {
                     tmclick.Text = $"开始执行";
                     txtmessage.AppendText($"定时执行停止,暂不执行任务" + Environment.NewLine);
+                    //将光标设置到末尾位置
+                    //txtmessage.Select(txtmessage.Text.Length, 0);
                     //设置添加文本后自动滚动显示到最后一行
                     txtmessage.ScrollToCaret();
                     _myTimer.Stop();
@@ -167,6 +169,8 @@ namespace ZohoApiTool
                 {
                     //将内容插入至多行文本(与+=一样作用) 换行\r\n （或System.Environment.NewLine）
                     txtmessage.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间已到,开始执行任务"+ Environment.NewLine);
+                    //将光标设置到末尾位置
+                    txtmessage.Select(txtmessage.Text.Length, 0);
                     //设置添加文本后自动滚动显示到最后一行
                     txtmessage.ScrollToCaret();
                     tmclick.Enabled = false;
@@ -198,6 +202,8 @@ namespace ZohoApiTool
                 {
                     txtmessage.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 执行结束" + Environment.NewLine);
                 }
+                //将光标设置到末尾位置
+                txtmessage.Select(txtmessage.Text.Length,0);
                 //设置添加文本后自动滚动显示到最后一行
                 txtmessage.ScrollToCaret();
                 pbar.Visible = false;

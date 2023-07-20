@@ -183,7 +183,6 @@
             // txtmessage
             // 
             this.txtmessage.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtmessage.Enabled = false;
             this.txtmessage.Location = new System.Drawing.Point(0, 0);
             this.txtmessage.Multiline = true;
             this.txtmessage.Name = "txtmessage";

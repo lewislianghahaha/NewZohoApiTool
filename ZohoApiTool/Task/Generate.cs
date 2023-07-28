@@ -721,7 +721,7 @@ namespace ZohoApiTool.Task
                         da.UpdateCommand.Parameters.Add("@quantity_invoiced", SqlDbType.Decimal, 4, "quantity_invoiced");
                         da.UpdateCommand.Parameters.Add("@quantity_packed", SqlDbType.Decimal, 4, "quantity_packed");
                         da.UpdateCommand.Parameters.Add("@quantity_shipped", SqlDbType.Decimal, 4, "quantity_shipped");
-                        da.UpdateCommand.Parameters.Add("@order_status", SqlDbType.NVarChar, 10, "order_status");
+                        da.UpdateCommand.Parameters.Add("@order_status", SqlDbType.NVarChar, 300, "order_status");
                         da.UpdateCommand.Parameters.Add("@invoiced_status", SqlDbType.NVarChar, 300, "invoiced_status");
                         da.UpdateCommand.Parameters.Add("@paid_status", SqlDbType.NVarChar, 300, "paid_status");
                         da.UpdateCommand.Parameters.Add("@shipped_status", SqlDbType.NVarChar, 300, "shipped_status");
@@ -783,7 +783,7 @@ namespace ZohoApiTool.Task
                         da.UpdateCommand.Parameters.Add("@quantity_invoiced", SqlDbType.Decimal, 4, "quantity_invoiced");
                         da.UpdateCommand.Parameters.Add("@quantity_packed", SqlDbType.Decimal, 4, "quantity_packed");
                         da.UpdateCommand.Parameters.Add("@quantity_shipped", SqlDbType.Decimal, 4, "quantity_shipped");
-                        da.UpdateCommand.Parameters.Add("@order_status", SqlDbType.NVarChar, 100, "order_status");
+                        da.UpdateCommand.Parameters.Add("@order_status", SqlDbType.NVarChar, 300, "order_status");
                         da.UpdateCommand.Parameters.Add("@invoiced_status", SqlDbType.NVarChar, 300, "invoiced_status");
                         da.UpdateCommand.Parameters.Add("@paid_status", SqlDbType.NVarChar, 300, "paid_status");
                         da.UpdateCommand.Parameters.Add("@shipped_status", SqlDbType.NVarChar, 300, "shipped_status");

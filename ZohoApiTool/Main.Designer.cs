@@ -40,10 +40,10 @@
             this.label2 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.lbmessage = new System.Windows.Forms.Label();
-            this.panel3 = new System.Windows.Forms.Panel();
-            this.pbar = new System.Windows.Forms.ProgressBar();
             this.nicon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.panel3 = new System.Windows.Forms.Panel();
             this.panel4 = new System.Windows.Forms.Panel();
+            this.pbar = new System.Windows.Forms.ProgressBar();
             this.txtmessage = new System.Windows.Forms.TextBox();
             this.Menu.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -146,39 +146,37 @@
             this.lbmessage.Size = new System.Drawing.Size(0, 12);
             this.lbmessage.TabIndex = 0;
             // 
-            // panel3
-            // 
-            this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel3.Controls.Add(this.pbar);
-            this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel3.Location = new System.Drawing.Point(0, 246);
-            this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(308, 26);
-            this.panel3.TabIndex = 3;
-            // 
-            // pbar
-            // 
-            this.pbar.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pbar.Location = new System.Drawing.Point(0, 1);
-            this.pbar.Name = "pbar";
-            this.pbar.Size = new System.Drawing.Size(306, 23);
-            this.pbar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
-            this.pbar.TabIndex = 2;
-            // 
             // nicon
             // 
             this.nicon.Icon = ((System.Drawing.Icon)(resources.GetObject("nicon.Icon")));
             this.nicon.Visible = true;
             // 
+            // panel3
+            // 
+            this.panel3.Controls.Add(this.pbar);
+            this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panel3.Location = new System.Drawing.Point(0, 245);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(308, 27);
+            this.panel3.TabIndex = 3;
+            // 
             // panel4
             // 
-            this.panel4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel4.Controls.Add(this.txtmessage);
             this.panel4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel4.Location = new System.Drawing.Point(0, 80);
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(308, 166);
+            this.panel4.Size = new System.Drawing.Size(308, 165);
             this.panel4.TabIndex = 4;
+            // 
+            // pbar
+            // 
+            this.pbar.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pbar.Location = new System.Drawing.Point(0, 0);
+            this.pbar.Name = "pbar";
+            this.pbar.Size = new System.Drawing.Size(308, 27);
+            this.pbar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+            this.pbar.TabIndex = 0;
             // 
             // txtmessage
             // 
@@ -187,8 +185,7 @@
             this.txtmessage.Location = new System.Drawing.Point(0, 0);
             this.txtmessage.Multiline = true;
             this.txtmessage.Name = "txtmessage";
-            this.txtmessage.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtmessage.Size = new System.Drawing.Size(306, 164);
+            this.txtmessage.Size = new System.Drawing.Size(308, 165);
             this.txtmessage.TabIndex = 0;
             // 
             // Main
@@ -229,15 +226,15 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Label lbmessage;
-        private System.Windows.Forms.Panel panel3;
-        private System.Windows.Forms.ProgressBar pbar;
         private System.Windows.Forms.NotifyIcon nicon;
-        private System.Windows.Forms.Panel panel4;
-        private System.Windows.Forms.TextBox txtmessage;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox commin;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox comhour;
+        private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.ProgressBar pbar;
+        private System.Windows.Forms.Panel panel4;
+        private System.Windows.Forms.TextBox txtmessage;
     }
 }
 

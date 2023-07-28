@@ -41,6 +41,7 @@ namespace ZohoApiTool
             nicon.Click += Nicon_Click;
             tmclick.Click += Tmclick_Click;
             pbar.Visible = false;
+            //txtmessage.TextChanged += Txtmessage_TextChanged;
             OnShowHourList();
             OnShowSecondList();
         }
@@ -234,6 +235,12 @@ namespace ZohoApiTool
             return result;
         }
 
+        //private void Txtmessage_TextChanged(object sender, EventArgs e)
+        //{
+        //    txtmessage.SelectionStart = txtmessage.Text.Length;
+        //    txtmessage.SelectionLength = 0;
+        //    txtmessage.ScrollToCaret();
+        //}
 
         /// <summary>
         ///'时'下拉列表

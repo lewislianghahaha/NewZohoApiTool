@@ -168,6 +168,12 @@ namespace ZohoApiTool
             {
                 if (_showid == 0)
                 {
+                    //todo:20230812 先对txtmessage文本框进行判断,若不为空,即清空后才插入数据
+                    if (txtmessage.Text != "")
+                    {
+                        txtmessage.Text = "";
+                    }
+
                     //将内容插入至多行文本(与+=一样作用) 换行\r\n （或System.Environment.NewLine）
                     txtmessage.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + $" 时间已到,开始执行任务"+ Environment.NewLine);
                     //将光标设置到末尾位置

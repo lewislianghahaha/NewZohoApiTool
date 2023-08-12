@@ -42,8 +42,8 @@
             this.lbmessage = new System.Windows.Forms.Label();
             this.nicon = new System.Windows.Forms.NotifyIcon(this.components);
             this.panel3 = new System.Windows.Forms.Panel();
-            this.panel4 = new System.Windows.Forms.Panel();
             this.pbar = new System.Windows.Forms.ProgressBar();
+            this.panel4 = new System.Windows.Forms.Panel();
             this.txtmessage = new System.Windows.Forms.TextBox();
             this.Menu.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -155,19 +155,10 @@
             // 
             this.panel3.Controls.Add(this.pbar);
             this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel3.Location = new System.Drawing.Point(0, 245);
+            this.panel3.Location = new System.Drawing.Point(0, 171);
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(308, 27);
             this.panel3.TabIndex = 3;
-            // 
-            // panel4
-            // 
-            this.panel4.Controls.Add(this.txtmessage);
-            this.panel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel4.Location = new System.Drawing.Point(0, 80);
-            this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(308, 165);
-            this.panel4.TabIndex = 4;
             // 
             // pbar
             // 
@@ -178,6 +169,15 @@
             this.pbar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.pbar.TabIndex = 0;
             // 
+            // panel4
+            // 
+            this.panel4.Controls.Add(this.txtmessage);
+            this.panel4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel4.Location = new System.Drawing.Point(0, 80);
+            this.panel4.Name = "panel4";
+            this.panel4.Size = new System.Drawing.Size(308, 91);
+            this.panel4.TabIndex = 4;
+            // 
             // txtmessage
             // 
             this.txtmessage.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -185,14 +185,14 @@
             this.txtmessage.Location = new System.Drawing.Point(0, 0);
             this.txtmessage.Multiline = true;
             this.txtmessage.Name = "txtmessage";
-            this.txtmessage.Size = new System.Drawing.Size(308, 165);
+            this.txtmessage.Size = new System.Drawing.Size(308, 91);
             this.txtmessage.TabIndex = 0;
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(308, 272);
+            this.ClientSize = new System.Drawing.Size(308, 198);
             this.Controls.Add(this.panel4);
             this.Controls.Add(this.panel3);
             this.Controls.Add(this.panel2);

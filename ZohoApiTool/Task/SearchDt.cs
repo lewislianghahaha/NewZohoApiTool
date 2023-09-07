@@ -81,6 +81,17 @@ namespace ZohoApiTool.Task
         }
 
         /// <summary>
+        /// 根据salesorderId查找是否已在BOOKS表内存在-日常执行使用
+        /// </summary>
+        /// <param name="salesorderId"></param>
+        /// <returns></returns>
+        public DataTable GetSearchBooksHeadHistory(string salesorderId)
+        {
+            var dt = UseSqlSearchIntoDt(sqlList.GetSearchBooksHeadHistory(salesorderId));
+            return dt;
+        }
+
+        /// <summary>
         /// 初始化根据表头信息获取表体line_item_id记录 (作用:用于判断已存在的明细记录是否删除)
         /// </summary>
         /// <returns></returns>

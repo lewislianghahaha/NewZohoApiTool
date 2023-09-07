@@ -171,8 +171,11 @@ namespace ZohoApiTool.Task
                         //将dtlrows进行数据整理-(注:以apiheaddt表结构进行插入数据)
                         var dtlrows = headDt.Select("salesorder_id ='" + Convert.ToString(rows[0]) + "'");
 
-                        //新记录-插入操作
-                        if (dtlrows.Length == 0)
+                        //todo:change date:20230907 添加检测项,将salesorder_id值放到T_BOOKS_SAL表进行查找,若都没有,才走"插入"
+                        var historydtlrows = searchDt.GetSearchBooksHeadHistory(Convert.ToString(rows[0]));
+
+                        //新记录-插入操作 todo:change date:20230907 既不然指定的‘两个月’内的记录集存在,也不在整BOOKS表存在,才执行插入
+                        if (dtlrows.Length == 0 && historydtlrows.Rows.Count == 0)
                         {
                             insertDt.Merge(MakeRecordDtToDb(0, 1, insertDt, ExchangeRecordToDb(rows, apiheaddt.Clone())));
                         }

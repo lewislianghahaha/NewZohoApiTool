@@ -17,7 +17,7 @@
         }
 
         /// <summary>
-        /// 初始化获取T_BOOKS_SAL表记录(注:只获取上月1号至当天记录)
+        /// 初始化获取T_BOOKS_SAL表记录(注:只获取上月1号至当天记录) --显示两个月的记录
         /// change date:20230801 包含IsDel=1的记录,因为有机会出现将已删除的单据恢复的情况
         /// 作用:1.与API返回结果进行比较,判断API返回数据是否新记录
         ///      2.放到表体API进行查找,用于判断此单据是否已删除
@@ -33,6 +33,20 @@
                         AND CONVERT(VARCHAR(10), A.OrderCreateDt, 23)>= CONVERT(VARCHAR(10), DATEADD(dd, -day(dateadd(month, -1, getdate())) + 1, dateadd(month, -1, getdate())), 23)
                         AND CONVERT(VARCHAR(10), A.OrderCreateDt, 23)<= CONVERT(VARCHAR(10), GETDATE(), 23)
                         ORDER BY A.OrderCreateDt";
+            return _result;
+        }
+
+        /// <summary>
+        /// 根据salesorderId查找是否已在BOOKS表内存在-日常执行使用
+        /// </summary>
+        /// <param name="salesorderId"></param>
+        /// <returns></returns>
+        public string GetSearchBooksHeadHistory(string salesorderId)
+        {
+            _result = $@"SELECT A.salesorder_id
+                        FROM T_BOOKS_SAL A
+                        WHERE salesorder_id='{salesorderId}'";
+
             return _result;
         }
 
